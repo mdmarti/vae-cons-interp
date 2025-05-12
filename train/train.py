@@ -2,7 +2,7 @@ import torch
 from models.vae import *
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-
+from tqdm import tqdm
 
 def save(model,optimizer,location):
 
@@ -78,13 +78,14 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1):
     scheduler = ReduceLROnPlateau(opt,factor=0.75,patience=5,min_lr=1e-10)
 
     train_recon,val_recon,train_reg,val_reg = [],[],[],[]
-    for epoch in nEpochs:
+    for epoch in tqdm(range(nEpochs),desc='training...'):
 
         model.train()
 
         for bi, batch in enumerate(dataloaders['train'],start=epoch*len(dataloaders['train'])):
 
             opt.zero_grad()
+            batch = batch.to(model.device).to(torch.float32)
 
             model_out = model(batch)
 
@@ -92,6 +93,7 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1):
 
             l = recon_loss + latent_reg
 
+            
             l.backward()
             opt.step()
 
@@ -104,6 +106,7 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1):
 
             vl,vr = 0.,0.
             for _, batch in enumerate(dataloaders['val']):
+                batch=batch.to(model.device).to(torch.float32)
 
                 model_out = model(batch)
 
@@ -117,7 +120,7 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1):
             val_reg.append((bi,vr))
 
             l = val_recon + val_reg
-            scheduler.step(l)
+            scheduler.step(vl+vr)
 
         if epoch % vis_freq == 0:
 
