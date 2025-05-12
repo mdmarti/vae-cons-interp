@@ -6,9 +6,9 @@ from torch import nn
 class Encoder(nn.Module):
 
 
-    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GeLU(),device='cuda'):
+    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='cuda'):
 
-        super(self,Encoder).__init__()
+        super(Encoder,self).__init__()
         if n_layers == 0:
             self.net = nn.Linear(data_dim,latent_dim)
         else:
@@ -38,7 +38,7 @@ class ProbabilisticEncoder(Encoder):
 
 
     def __init__(self, n_layers_shared,n_layers_private,\
-                 data_dim, hidden_dim, latent_dim, activation=nn.GeLU(), device='cuda'):
+                 data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='cuda'):
         super().__init__(n_layers_shared, data_dim, hidden_dim, hidden_dim, activation, device)
         if n_layers_private == 0:
             self.mu_net = nn.Linear(hidden_dim,latent_dim)
@@ -85,16 +85,16 @@ class ProbabilisticEncoder(Encoder):
 class Decoder(nn.Module):
 
 
-    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GeLU(),device='cuda'):
+    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='cuda'):
 
-        super(self,Decoder).__init__()
+        super(Decoder,self).__init__()
         if n_layers == 0:
             self.net = nn.Linear(latent_dim,data_dim)
         else:
-            layers = [nn.Linear(data_dim,hidden_dim), activation]
+            layers = [nn.Linear(latent_dim,hidden_dim), activation]
             for _ in range(n_layers - 1):
                 layers += [nn.Linear(hidden_dim,hidden_dim),activation]
-            layers += [nn.Linear(hidden_dim,latent_dim)]
+            layers += [nn.Linear(hidden_dim,data_dim)]
 
             self.net = nn.Sequential(*layers)
         self.device = device
@@ -119,6 +119,7 @@ class AutoEncoder(nn.Module):
 
     def __init__(self,encoder,decoder,device='cuda'):
 
+        super(AutoEncoder,self).__init__()
         self.encoder=encoder 
         self.decoder=decoder
         self.device=device 
@@ -136,6 +137,14 @@ class AutoEncoder(nn.Module):
         xhat = self.decoder(z)
 
         return xhat,z 
+    
+    def encode(self,x):
+
+        return self.encoder(x)
+    
+    def decode(self,z):
+
+        return self.decoder(z)
     
 class VariationalAutoEncoder(AutoEncoder):
 
