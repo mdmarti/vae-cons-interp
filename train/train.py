@@ -4,7 +4,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 
-def save(model,optimizer,location):
+def save_model(model,optimizer,location):
 
 
     sd = {'ac': model.state_dict(),
@@ -16,7 +16,7 @@ def save(model,optimizer,location):
 
     torch.save(sd,location)
 
-def load(location):
+def load_model(location):
 
     sd = torch.load(location,weights_only=False)
     model_params = sd['ac']
@@ -48,12 +48,12 @@ def load(location):
         raise NotImplementedError
     
     if decoder_type == 'MLP':
-        dec = Decoder(n_layers=encoder_details['n_layers'],
-                      data_dim=encoder_details['data_dim'],
-                      hidden_dim=encoder_details['hidden_dim'],
-                      latent_dim=encoder_details['latent_dim'],
-                      activation=encoder_details['activation'],
-                      device=encoder_details['device'])
+        dec = Decoder(n_layers=decoder_details['n_layers'],
+                      data_dim=decoder_details['data_dim'],
+                      hidden_dim=decoder_details['hidden_dim'],
+                      latent_dim=decoder_details['latent_dim'],
+                      activation=decoder_details['activation'],
+                      device=decoder_details['device'])
     else:
         raise NotImplementedError
     
@@ -61,7 +61,7 @@ def load(location):
         model = AutoEncoder(enc,dec,device=ac_details['device'])
 
     elif ac_type =='VAE':
-        model = VAE(enc,dec,device=ac_details['device'],latent_distribution=ac_details['latent_dist'])
+        model = VariationalAutoEncoder(enc,dec,device=ac_details['device'],latent_distribution=ac_details['latent_dist'])
 
     model.load_state_dict(model_params)
     opt=Adam(model.parameters(),lr=1e-3)
