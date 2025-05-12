@@ -5,7 +5,7 @@ import os
 
 
 
-def toy_dataset(Dataset):
+class toy_dataset(Dataset):
 
     def __init__(self,data):
 
@@ -24,7 +24,7 @@ def get_loaders(data,test_size = 0.4,seed=None,batch_size=256,num_workers=1):
 
 
     X_train, X_cv = train_test_split(data,test_size=test_size,random_state=seed)
-    X_val,X_test = train_test_split(X_cv,test_size=0.5,seed=seed)
+    X_val,X_test = train_test_split(X_cv,test_size=0.5,random_state=seed)
 
     DS_train,DS_val,DS_test = toy_dataset(X_train),toy_dataset(X_val),toy_dataset(X_test)
 
