@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 def MSE(target,model_output):
 
@@ -22,9 +23,10 @@ def ELBO(target,model_output,recon_precision=1e-5):
 
     B,d = xhat.shape
     neg_lp = torch.linalg.norm(target - xhat,dim=-1,ord=2)**2 *(recon_precision)/2 + \
-        torch.log(2*torch.pi)/2 - d * torch.log(recon_precision)/2 # doublecheck this
+        d*np.log(2*np.pi)/2 - d * np.log(recon_precision)/2 # doublecheck this
+
     
     entropy = dist.entropy()
-    cross_entropy = 0.
-
-    return neg_lp, entropy + cross_entropy
+    cross_entropy = d*np.log(2*np.pi)/2 + torch.einsum('bk,bk ->b',z,z)
+    
+    return neg_lp.mean(), (-entropy + cross_entropy).mean()
