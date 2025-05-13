@@ -71,7 +71,7 @@ def load_model(location):
 
     return model,opt,scheduler
 
-def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1):
+def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_norm_grad=1e-2):
 
 
     opt = Adam(model.parameters(),lr=lr)
@@ -95,7 +95,7 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1):
 
             
             l.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=1e-2)
+            torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=max_norm_grad)
             opt.step()
 
             train_recon.append(recon_loss.item())
