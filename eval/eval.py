@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+from sklearn.decomposition import PCA
 
 def train_test_plot(recons,regularization,label=''):
 
@@ -24,10 +24,10 @@ def train_test_plot(recons,regularization,label=''):
     plt.show()
     plt.close()
 
-def embedding_plot(embeddings,reconstructions,original_projection,original_embeddings,data_labels,label=''):
+def embedding_plot(embeddings,reconstructions,original_embeddings,data_labels,label=''):
 
     
-    unprojected = original_projection.un_project(reconstructions)
+    unprojected = PCA(n_components=2).fit_transform(reconstructions) #original_projection.un_project(reconstructions)
     
     #embeddings= embeddings.detach().cpu().numpy()
     #print(embeddings.shape,data.shape)

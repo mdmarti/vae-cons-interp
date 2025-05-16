@@ -97,6 +97,7 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_
             l.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=max_norm_grad)
             opt.step()
+            model.decoder.regularize()
 
             train_recon.append(recon_loss.item())
             train_reg.append(latent_reg.item())
@@ -121,7 +122,7 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_
             val_reg.append((bi,vr))
 
             l = val_recon + val_reg
-            scheduler.step(vl+vr)
+            #scheduler.step(vl+vr)
 
         if epoch % vis_freq == 0:
 

@@ -113,6 +113,62 @@ class Decoder(nn.Module):
     def forward(self,x):
         return self.net(x)
     
+    def regularize(self):
+        pass
+
+def power_iter(weight,n_power_iters):
+
+    x = torch.randn((weight.shape[1]),device=weight.device)
+    for ii in range(n_power_iters):
+        x = weight.T @ weight @ x
+    
+    return torch.linalg.norm(weight @ x)/torch.linalg.norm(x)  
+
+class LipschitzDecoder(Decoder):
+
+    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='cuda',max_lipschitz=2,
+                 norm_func=lambda w: power_iter(w,n_power_iters=10)):
+
+        super(LipschitzDecoder,self).__init__(n_layers,data_dim,hidden_dim,latent_dim,activation,device)
+        self.max_lipschitz=max_lipschitz
+        self.norm_func=norm_func
+
+    def regularize(self):
+        self.lipschitz_constrain()
+
+    def lipschitz_constrain(self):
+
+        #pre_weights = []
+        for name,module in self.named_modules():
+
+            try:
+                w = module.weight
+            except:
+                continue 
+            #pre_weights.append(w.detach().cpu().numpy())
+            operator_norm = self.norm_func(w)
+            w = w / max(1,operator_norm/self.max_lipschitz)
+            with torch.no_grad():
+                module.weight = nn.Parameter(w)
+            if operator_norm > self.max_lipschitz:
+                print(f"constraining {name}")
+
+        #post_weights = []
+        #for name,module in self.named_modules():
+        #    try:
+        #        w = module.weight
+        #    except:
+        #        continue 
+        #    #post_weights.append(w.detach().cpu().numpy())
+
+        #return pre_weights,post_weights
+
+    
+
+
+
+
+    
 
 class AutoEncoder(nn.Module):
 
