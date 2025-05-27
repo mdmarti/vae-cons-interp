@@ -81,6 +81,61 @@ class ProbabilisticEncoder(Encoder):
 
         return mu, L.unsqueeze(-1), d.exp()
 
+class LinearPlusNonlinear(nn.Module):
+
+    def __init__(self,in_size,out_size,nonlinearity=nn.GELU(),device='cuda'):
+
+        super(LinearPlusNonlinear,self).__init__()
+
+        self.linear = nn.Linear(in_size,out_size,device=device)
+        self.nonlinear = nn.Linear(in_size,out_size,device=device)
+        self.nonlinearity=nonlinearity
+
+
+    def forward(self,x,return_both=False):
+
+        if return_both:
+            return self.linear(x), self.nonlinearity(self.nonlinear(x))
+        else:
+            return self.linear(x) + self.nonlinearity(self.nonlinear(x))
+    
+class LipschitzPlusUnCon(nn.Module):
+
+    def __init__(self,in_size,out_size,nonlinearity=nn.GELU(),device='cuda',\
+                 norm_func = lambda w: power_iter(w,n_power_iters=10),lip_const=1.5):
+
+        super(LipschitzPlusUnCon,self).__init__()
+        self.lipschitz = nn.Linear(in_size,out_size,device=device)
+        self.unconstrained = nn.Linear(in_size,out_size,device=device)
+        self.nonlinearity=nonlinearity
+        self.lip_const=lip_const
+        self.norm_func=norm_func
+
+
+    def forward(self,x,return_both=False):
+
+        if return_both:
+
+            return self.nonlinearity(self.lipschitz(x)),self.nonlinearity(self.unconstrained(x))
+        
+        else:
+
+            return self.nonlinearity(self.lipschitz(x)) + self.nonlinearity(self.unconstrained(x))
+
+
+    def regularize(self):
+        self.lipschitz_constrain()
+
+    def lipschitz_constrain(self):
+
+        #pre_weights = []
+        w = self.lipschitz.weight
+        operator_norm = self.norm_func(w)
+        self.lipschitz.weight /= max(1,operator_norm/self.lip_const)
+
+
+#### finish this here
+
 
 class Decoder(nn.Module):
 
@@ -149,24 +204,9 @@ class LipschitzDecoder(Decoder):
             operator_norm = self.norm_func(w)
             w = w / max(1,operator_norm/self.max_lipschitz)
             with torch.no_grad():
-                module.weight = nn.Parameter(w)
+                module.weight /= max(1,operator_norm/self.max_lipschitz)
             if operator_norm > self.max_lipschitz:
                 print(f"constraining {name}")
-
-        #post_weights = []
-        #for name,module in self.named_modules():
-        #    try:
-        #        w = module.weight
-        #    except:
-        #        continue 
-        #    #post_weights.append(w.detach().cpu().numpy())
-
-        #return pre_weights,post_weights
-
-    
-
-
-
 
     
 
