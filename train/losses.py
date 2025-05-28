@@ -22,10 +22,12 @@ def ELBO(target,model_output,recon_precision=1e-5):
     (xhat,z,dist) = model_output
 
     B,d = xhat.shape
-    neg_lp = torch.linalg.norm(target - xhat,dim=-1,ord=2)**2 *(recon_precision)/2 + \
+    err = target - xhat
+    neg_lp = torch.einsum('bd,bd->b',err,err) *(recon_precision)/2 + \
         d*np.log(2*np.pi)/2 - d * np.log(recon_precision)/2 # doublecheck this
 
-    
+    ### for the kl term, this is maybe not the most stable -- let's return the parameters instead of 
+    ### the distribution
     entropy = dist.entropy()
     cross_entropy = d*np.log(2*np.pi)/2 + torch.einsum('bk,bk ->b',z,z)
     
