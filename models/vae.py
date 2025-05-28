@@ -98,6 +98,18 @@ class LinearPlusNonlinear(nn.Module):
             return self.linear(x), self.nonlinearity(self.nonlinear(x))
         else:
             return self.linear(x) + self.nonlinearity(self.nonlinear(x))
+        
+class LinearEncouragementLayer(nn.Module):
+
+    def __init__(self,in_size,out_size,device='cuda'):
+
+        super(LinearPlusNonlinear,self).__init__()
+
+        self.linear = nn.Linear(in_size,out_size,device=device)
+        self.nonlinearity =nn.PReLU(num_parameters =out_size)
+
+    def forward(self,x):
+        return self.nonlinearity(self.linear(x))
     
 class LipschitzPlusUnCon(nn.Module):
 
@@ -191,6 +203,8 @@ class SoftRegularizedDecoder(Decoder):
 
     def __init__(self, n_layers, data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='cuda'):
         super().__init__(n_layers, data_dim, hidden_dim, latent_dim, activation, device)
+
+
 
 
 
