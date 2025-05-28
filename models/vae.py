@@ -6,7 +6,7 @@ from torch import nn
 class Encoder(nn.Module):
 
 
-    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='cuda'):
+    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='default'):
 
         super(Encoder,self).__init__()
         if n_layers == 0:
@@ -18,6 +18,8 @@ class Encoder(nn.Module):
             layers += [nn.Linear(hidden_dim,latent_dim)]
 
             self.net = nn.Sequential(*layers)
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.device = device
         self.to(device)
         self.spec_dict={
@@ -38,7 +40,7 @@ class ProbabilisticEncoder(Encoder):
 
 
     def __init__(self, n_layers_shared,n_layers_private,\
-                 data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='cuda'):
+                 data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='default'):
         super().__init__(n_layers_shared, data_dim, hidden_dim, hidden_dim, activation, device)
         if n_layers_private == 0:
             self.mu_net = nn.Linear(hidden_dim,latent_dim)
@@ -59,7 +61,8 @@ class ProbabilisticEncoder(Encoder):
             self.mu_net = nn.Sequential(*mu_layers)
             self.L_net = nn.Sequential(*L_layers)
             self.d_net = nn.Sequential(*d_layers)
-
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.device = device
         self.to(device)
         self.spec_dict={
@@ -70,7 +73,7 @@ class ProbabilisticEncoder(Encoder):
             'latent_dim':latent_dim,
             'activation':activation,
             'device':device,
-            'type':'probabilistic'
+            'type':'probabilistic',
         }
 
     def forward(self,x):
@@ -83,10 +86,12 @@ class ProbabilisticEncoder(Encoder):
 
 class LinearPlusNonlinear(nn.Module):
 
-    def __init__(self,in_size,out_size,nonlinearity=nn.GELU(),device='cuda'):
+    def __init__(self,in_size,out_size,nonlinearity=nn.GELU(),device='default'):
 
         super(LinearPlusNonlinear,self).__init__()
 
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.linear = nn.Linear(in_size,out_size,device=device)
         self.nonlinear = nn.Linear(in_size,out_size,device=device)
         self.nonlinearity=nonlinearity
@@ -101,9 +106,11 @@ class LinearPlusNonlinear(nn.Module):
         
 class LinearEncouragementLayer(nn.Module):
 
-    def __init__(self,in_size,out_size,device='cuda'):
+    def __init__(self,in_size,out_size,device='default'):
 
         super(LinearPlusNonlinear,self).__init__()
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.linear = nn.Linear(in_size,out_size,device=device)
         self.nonlinearity =nn.PReLU(num_parameters =out_size)
@@ -113,10 +120,12 @@ class LinearEncouragementLayer(nn.Module):
     
 class LipschitzPlusUnCon(nn.Module):
 
-    def __init__(self,in_size,out_size,nonlinearity=nn.GELU(),device='cuda',\
+    def __init__(self,in_size,out_size,nonlinearity=nn.GELU(),device='default',\
                  norm_func = lambda w: power_iter(w,n_power_iters=10),lip_const=1.5):
 
         super(LipschitzPlusUnCon,self).__init__()
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.lipschitz = nn.Linear(in_size,out_size,device=device)
         self.unconstrained = nn.Linear(in_size,out_size,device=device)
         self.nonlinearity=nonlinearity
@@ -152,7 +161,7 @@ class LipschitzPlusUnCon(nn.Module):
 class Decoder(nn.Module):
 
 
-    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='cuda'):
+    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='default'):
 
         super(Decoder,self).__init__()
         if n_layers == 0:
@@ -164,6 +173,8 @@ class Decoder(nn.Module):
             layers += [nn.Linear(hidden_dim,data_dim)]
 
             self.net = nn.Sequential(*layers)
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.device = device
         self.to(device)
         self.spec_dict={
@@ -201,7 +212,7 @@ def linfnorm(weight):
 
 class SoftRegularizedDecoder(Decoder):
 
-    def __init__(self, n_layers, data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='cuda'):
+    def __init__(self, n_layers, data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='default'):
         super().__init__(n_layers, data_dim, hidden_dim, latent_dim, activation, device)
 
 
@@ -210,7 +221,7 @@ class SoftRegularizedDecoder(Decoder):
 
 class LipschitzDecoder(Decoder):
 
-    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='cuda',max_lipschitz=2,
+    def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='default',max_lipschitz=2,
                  norm_func=lambda w: power_iter(w,n_power_iters=10)):
 
         super(LipschitzDecoder,self).__init__(n_layers,data_dim,hidden_dim,latent_dim,activation,device)
@@ -242,11 +253,13 @@ class LipschitzDecoder(Decoder):
 class AutoEncoder(nn.Module):
 
 
-    def __init__(self,encoder,decoder,device='cuda'):
+    def __init__(self,encoder,decoder,device='default'):
 
         super(AutoEncoder,self).__init__()
         self.encoder=encoder 
         self.decoder=decoder
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.device=device 
         self.to(device)
 
@@ -273,10 +286,11 @@ class AutoEncoder(nn.Module):
     
 class VariationalAutoEncoder(AutoEncoder):
 
-    def __init__(self, encoder, decoder, latent_distribution, device='cuda'):
+    def __init__(self, encoder, decoder, latent_distribution, device='default',out_type='dist'):
         super().__init__(encoder, decoder, device)
 
         self.latent_distribution=latent_distribution
+        self.out_type = out_type
         self.spec_dict={
             'type':'VAE',
             'device':device,
@@ -294,7 +308,10 @@ class VariationalAutoEncoder(AutoEncoder):
 
         xhat = self.decoder(z)
 
-        return xhat,z,latent_dist
+        if self.out_type == 'dist':
+            return xhat,z,latent_dist
+        elif self.out_type == 'params':
+            return xhat,z,latent_params
 
 
 
