@@ -32,3 +32,18 @@ def ELBO(target,model_output,recon_precision=1e-5):
     cross_entropy = d*np.log(2*np.pi)/2 + torch.einsum('bk,bk ->b',z,z)
     
     return neg_lp.mean(), (-entropy + cross_entropy).mean()
+
+def ELBO_more_stable(target,model_output,recon_precision=1e-3):
+
+    B,d = xhat.shape
+    (xhat,z,dist) = model_output
+    (mu,L,D) = dist
+    L = L.squeeze() # goes from B x d x 1 -> B x d
+
+    err = target - xhat
+    neg_lp = torch.einsum('bd,bd->b',err,err) *(recon_precision)/2 + \
+        d*np.log(2*np.pi)/2 - d * np.log(recon_precision)/2 
+
+    KL = 1/2 *(-torch.log(d)*(1 + torch.einsum('bd,bd->b',L/D,L)) -1 + (L**2 + D)+mu**2).sum(dim=1)
+
+    return neg_lp.mean(),KL.mean()
