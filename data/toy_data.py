@@ -1,6 +1,5 @@
 import numpy as np 
 
-
 class LinearProjection():
 
     def __init__(self,data_dim,project_dim):
@@ -24,6 +23,14 @@ class LinearProjection():
 
         return data @ self.w.T @ np.linalg.pinv(self.w @ self.w.T)
     
+class IdentityProjection(LinearProjection):
+
+    def __init__(self,data_dim):
+
+        super(IdentityProjection,self).__init__(data_dim,data_dim)
+
+        self.w = np.eye(data_dim)
+    
 class NonlinearProjection(LinearProjection):
 
     def __init__(self,data_dim,project_dim,nonlinearity,inverse_nonlinearity):
@@ -40,7 +47,7 @@ class NonlinearProjection(LinearProjection):
     def un_project(self, data):
         return super().un_project(self.inverse_nonlinearity(data))
 
-def generate_mixture_dataset(n_samples=100,projection= lambda x: x,proj_sd=0.):
+def generate_mixture_dataset(projection,n_samples=100,proj_sd=0.):
 
     ## play around with parameters here
     generator = np.random.default_rng()

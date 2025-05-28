@@ -179,6 +179,21 @@ def power_iter(weight,n_power_iters):
     
     return torch.linalg.norm(weight @ x)/torch.linalg.norm(x)  
 
+def l1norm(weight):
+
+    return torch.amax(torch.sum(weight.abs(),dim=0))
+
+def linfnorm(weight):
+
+    return torch.amax(torch.sum(weight.abs(),dim=1))
+
+class SoftRegularizedDecoder(Decoder):
+
+    def __init__(self, n_layers, data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='cuda'):
+        super().__init__(n_layers, data_dim, hidden_dim, latent_dim, activation, device)
+
+
+
 class LipschitzDecoder(Decoder):
 
     def __init__(self,n_layers,data_dim,hidden_dim,latent_dim,activation=nn.GELU(),device='cuda',max_lipschitz=2,
