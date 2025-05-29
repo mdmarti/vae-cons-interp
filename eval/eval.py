@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+from visualization.utils import format_axis
 
-def train_test_plot(recons,regularization,label=''):
+def train_test_plot(recons,regularization,label='',show=False,save_fn='train_test_curves.svg'):
 
     (train_recons,test_recons) = recons
     train_recons,test_recons=np.array(train_recons),np.array(test_recons)
@@ -10,18 +11,26 @@ def train_test_plot(recons,regularization,label=''):
     train_kls,test_kls=np.array(train_kls),np.array(test_kls)
     
     fig,(ax1,ax2) = plt.subplots(nrows=1,ncols=2,figsize=(10,5))
-    ax1.plot(train_recons)
-    ax1.plot(test_recons[:,0],test_recons[:,1])
+    ax1.plot(train_recons,label='Train')
+    ax1.plot(test_recons[:,0],test_recons[:,1],label='Validation')
+    
+    ax1 = format_axis(xlabel='Gradient steps',ylabel='Negative log probability',\
+                      xticks=np.arange(0,len(train_recons)+1,len(train_recons)//5))
     ax1.set_title("negative log probability")
+    
     #ax.set_yscale('log')
     
     ax2.plot(train_kls)
     ax2.plot(test_kls[:,0],test_kls[:,1])
     #ax.set_yscale('log')
     ax2.set_title("KL term")
+    ax1.legend()
     fig.suptitle(label)
     plt.tight_layout()
-    plt.show()
+    if show:
+        plt.show()
+    else:
+        plt.savefig(save_fn)
     plt.close()
 
 def embedding_plot(embeddings,reconstructions,original_embeddings,data_labels,label=''):

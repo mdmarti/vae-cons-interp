@@ -83,6 +83,18 @@ def assess_gmm_fit(y,yhat):
 
     return precisions,recalls
 
+def get_all_stats(true_latents,pred_latents,true_labels,pred_labels):
+
+
+    nbs = neural_bures_sim(true_latents,pred_latents)
+    global_lin_errs = global_linear_error(true_latents,pred_latents)
+    nn_neighors = find_nearest_neighbors(true_latents,pred_latents)
+
+    precision,recall = assess_gmm_fit(true_labels,pred_labels)
+
+    return nbs,global_lin_errs,nn_neighors,precision,recall
+
+
 
 
 

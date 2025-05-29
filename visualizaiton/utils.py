@@ -7,7 +7,7 @@ def format_axis(ax,xlabel='',ylabel='',title='',xticks=[],yticks=[],xlims=(),yli
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
-    
+
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
 
@@ -15,3 +15,7 @@ def format_axis(ax,xlabel='',ylabel='',title='',xticks=[],yticks=[],xlims=(),yli
         ax.set_xlim(xlims)
     if len(ylims) > 0:
         ax.set_ylim(ylims)
+
+    ax.tick_params(axis='both',which='both',direction='in')
+
+    return ax
