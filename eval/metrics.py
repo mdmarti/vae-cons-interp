@@ -94,12 +94,3 @@ def get_all_stats(true_latents,pred_latents,true_labels,pred_labels):
 
     return nbs,global_lin_errs,nn_neighors,precision,recall
 
-
-
-
-
-
-
-
-
-
