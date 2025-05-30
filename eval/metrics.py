@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.metrix import pairwise_distances 
+from sklearn.metrics import pairwise_distances 
 from scipy.linalg import sqrtm
 from sklearn.neighbors import NearestNeighbors as NN
 from scipy.stats import mode 
