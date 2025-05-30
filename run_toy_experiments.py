@@ -101,6 +101,8 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
                                    nonlinearity=nonlinearity,inverse_nonlinearity=inverse_nonlinearity)
 
 
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
     latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=1.5)
 
     l1_lip_proj = l1norm(proj.w)
