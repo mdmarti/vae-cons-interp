@@ -18,7 +18,9 @@ def train_test_plot(recons,regularization,label='',show=False,save_fn='train_tes
     # np.arange(xlim[0],xlim[1]+1,(xlim[1]-xlim[0]) //5),np.arange(ylim[0],ylim[1]+1,(xlim[1]-ylim[0]) //5)
     ax1 = format_axis(ax1,xlabel='Gradient steps',ylabel='Negative log probability',
                       xticks=ax1.get_xticks(),
-                    yticks=ax1.get_yticks())
+                      yticks=ax1.get_yticks(),
+                      xlims=ax1.get_xlim(),
+                      ylims=ax2.get_ylim())
     #ax1.set_title("negative log probability")
     
     #ax.set_yscale('log')
@@ -28,7 +30,9 @@ def train_test_plot(recons,regularization,label='',show=False,save_fn='train_tes
     xlim,ylim = ax1.get_xlim(),ax1.get_ylim()
     ax2 = format_axis(ax2,xlabel='Gradient steps',ylabel='KL Divergence',
                       xticks=ax2.get_xticks(),
-                      yticks=ax2.get_yticks())
+                      yticks=ax2.get_yticks(),
+                      xlims=ax2.get_xlim(),
+                      ylims=ax2.get_ylim())
     #ax.set_yscale('log')
     #ax2.set_title("KL term")
     ax1.legend()
