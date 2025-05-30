@@ -38,7 +38,9 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
                                         data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,device=device)
                 
                 if model_type == 'regularized_nonlinear':
-                    return [],[],[],[]
+                    dec = RegularizedDecoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
+                                activation=decoder_activation,device=device)
+                    loss = lambda target,model_out : ELBO_linear_encouragement(target,model_out,dec,recon_precision=precision,weight_penalty=1) ### try this out on monday
                 else:
                     dec = Decoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
                                 activation=decoder_activation,device=device)

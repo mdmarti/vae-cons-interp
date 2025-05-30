@@ -108,7 +108,7 @@ class LinearEncouragementLayer(nn.Module):
 
     def __init__(self,in_size,out_size,device='default'):
 
-        super(LinearPlusNonlinear,self).__init__()
+        super().__init__()
         if device == 'default':
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -194,6 +194,35 @@ class Decoder(nn.Module):
     def regularize(self):
         pass
 
+class RegularizedDecoder(Decoder):
+
+    def __init__(self, n_layers, data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='default'):
+        super().__init__(n_layers, data_dim, hidden_dim, latent_dim, activation, device)
+
+        if n_layers == 0:
+            self.net = LinearEncouragementLayer(latent_dim,data_dim)
+        else:
+            layers = [LinearEncouragementLayer(latent_dim,hidden_dim)]
+            for _ in range(n_layers - 1):
+                layers += [LinearEncouragementLayer(hidden_dim,hidden_dim)]
+            layers += [nn.Linear(hidden_dim,data_dim)]
+
+            self.net = nn.Sequential(*layers)
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = device
+        self.to(device)
+        self.spec_dict={
+            'n_layers':n_layers,
+            'data_dim':data_dim,
+            'hidden_dim':hidden_dim,
+            'latent_dim':latent_dim,
+            'activation':activation,
+            'device':device,
+            'type': 'regularized MLP'
+        }
+
+
 def power_iter(weight,n_power_iters):
 
     x = torch.randn((weight.shape[1]),device=weight.device)
@@ -209,14 +238,6 @@ def l1norm(weight):
 def linfnorm(weight):
 
     return torch.amax(torch.sum(weight.abs(),dim=1))
-
-class SoftRegularizedDecoder(Decoder):
-
-    def __init__(self, n_layers, data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='default'):
-        super().__init__(n_layers, data_dim, hidden_dim, latent_dim, activation, device)
-
-
-
 
 
 class LipschitzDecoder(Decoder):
