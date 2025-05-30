@@ -13,17 +13,24 @@ def train_test_plot(recons,regularization,label='',show=False,save_fn='train_tes
     fig,(ax1,ax2) = plt.subplots(nrows=1,ncols=2,figsize=(10,5))
     ax1.plot(train_recons,label='Train')
     ax1.plot(test_recons[:,0],test_recons[:,1],label='Validation')
-    
-    ax1 = format_axis(xlabel='Gradient steps',ylabel='Negative log probability',\
-                      xticks=np.arange(0,len(train_recons)+1,len(train_recons)//5))
-    ax1.set_title("negative log probability")
+
+    #xlim,ylim = ax1.get_xlim(),ax1.get_ylim()
+    # np.arange(xlim[0],xlim[1]+1,(xlim[1]-xlim[0]) //5),np.arange(ylim[0],ylim[1]+1,(xlim[1]-ylim[0]) //5)
+    ax1 = format_axis(ax1,xlabel='Gradient steps',ylabel='Negative log probability',
+                      xticks=ax1.get_xticks(),
+                    yticks=ax1.get_yticks())
+    #ax1.set_title("negative log probability")
     
     #ax.set_yscale('log')
     
     ax2.plot(train_kls)
     ax2.plot(test_kls[:,0],test_kls[:,1])
+    xlim,ylim = ax1.get_xlim(),ax1.get_ylim()
+    ax2 = format_axis(ax2,xlabel='Gradient steps',ylabel='KL Divergence',
+                      xticks=ax2.get_xticks(),
+                      yticks=ax2.get_yticks())
     #ax.set_yscale('log')
-    ax2.set_title("KL term")
+    #ax2.set_title("KL term")
     ax1.legend()
     fig.suptitle(label)
     plt.tight_layout()
