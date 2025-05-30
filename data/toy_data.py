@@ -61,10 +61,10 @@ def generate_mixture_dataset(projection,n_samples=100,proj_sd=0.):
 
     sample_labels = generator.choice(4,n_samples,replace=True,p=mixture_weights)
     #print(samples.shape)
-    print(np.sum(sample_labels == 0)/n_samples)
-    print(np.sum(sample_labels == 1)/n_samples)
-    print(np.sum(sample_labels == 2)/n_samples)
-    print(np.sum(sample_labels == 3)/n_samples)
+    #print(np.sum(sample_labels == 0)/n_samples)
+    #print(np.sum(sample_labels == 1)/n_samples)
+    #print(np.sum(sample_labels == 2)/n_samples)
+    #print(np.sum(sample_labels == 3)/n_samples)
 
     mu_samples,cov_samples = mus[sample_labels],covs[sample_labels]
 

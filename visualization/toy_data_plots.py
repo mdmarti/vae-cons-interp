@@ -39,7 +39,7 @@ def make_toy_plot(true_latents,train_data,\
                          ylims=ax.get_ylim())
 
     plt.tight_layout()
-    if show():
+    if show:
         plt.show()
     elif save_fn != '':
         plt.savefig(save_fn)
