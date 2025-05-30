@@ -70,18 +70,17 @@ def assess_gmm_fit(y,yhat):
         print(f"label {label} corresponds to gmm cluster {most_common_label}")
         pred_inds = yhat == most_common_label
         
-        true_positives = np.sum((inds == 1)*(pred_inds == 0)) # indices should be 2 if both are 1, 1 if one is, 0 if neither is
-        false_positives = np.sum((inds == 0) * (pred_inds == 1))
+        true_positives = np.sum(inds*pred_inds) # indices should be 2 if both are 1, 1 if one is, 0 if neither is
+        false_positives = np.sum((1 - inds) * pred_inds)
 
-        true_negatives = np.sum((inds == 0) * (pred_inds == 0))
-        false_negatives = np.sum((inds == 1) *(pred_inds == 0)) 
+        true_negatives = np.sum((1-inds) * (1-pred_inds))
+        false_negatives = np.sum(inds *(1 -pred_inds)) 
 
         prec = true_positives/(true_positives + false_positives)
         rec = true_positives/(true_positives + false_negatives)
         
         precisions.append(prec)
         recalls.append(rec)
-        print(prec,rec)
 
     return precisions,recalls
 
