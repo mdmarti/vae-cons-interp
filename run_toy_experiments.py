@@ -9,12 +9,13 @@ from train.train import train,save_model,load_model
 from models.vae import *
 from eval.metrics import assess_gmm_fit,get_all_stats
 import os
-from fire import fire
+#from fire import fire
 
 from sklearn.mixture import GaussianMixture as GMM
 from eval.eval import train_test_plot,embedding_plot
 import json
 from visualization.toy_data_plots import make_toy_plot
+import fire
 
 def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr=1e-3,
                n_layers_shared=4,n_layers_private=3,data_dim=1000,hidden_dim=125,latent_dim=2,
@@ -28,13 +29,14 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
     done_training = False
     n_attempts = 0
 
-    loss = lambda target, model_out: ELBO(target,model_out,recon_precision=precision)
+    loss = lambda target, model_out: ELBO_more_stable(target,model_out,recon_precision=precision)
     if not os.path.isfile(model_path):
         while n_attempts < 5 and not done_training:
 
             try:
                 enc = ProbabilisticEncoder(n_layers_shared=n_layers_shared,n_layers_private=n_layers_private,
                                         data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,device=device)
+                
                 if model_type == 'regularized_nonlinear':
                     return [],[],[],[]
                 else:
@@ -103,22 +105,23 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
-    latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=1.5)
+    latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=0.75)
 
     l1_lip_proj = l1norm(torch.from_numpy(proj.w))
 
     base_model = GMM(n_components=4,covariance_type='full',n_init=10)
     pred_labels = base_model.fit_predict(data)
-
+    #print(pred_labels.shape)
+    #print(labels.shape)
     base_precisions,base_recalls = assess_gmm_fit(labels,pred_labels)
 
     loaders = get_loaders(data,test_size=0.4,seed=777,num_workers = 8,batch_size=512)
 
-    precisions = np.logspace(-2,3,10)
+    precisions = [1e-2,1e-1,1e0,1e1,1e2,1e3] #np.logspace(-2,3,1)
     lr = 1e-3
     for p in precisions:
 
-
+        print(f'now fitting for precision = {p}')
         ##### Linaer model #######
         vae_linear_lps,vae_linear_kls,vae_linearlatents,vae_linearrecons = run_helper(save_dir,model_type='linear',precision=p,\
                                                         loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
@@ -184,7 +187,8 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         make_toy_plot(latents,data,vae_linearlatents,vae_linearrecons,\
                       vae_deeplinearlatents,vae_deeplinearrecons,\
                         vae_nonlinearlatents,vae_nonlinearrecons,labels,\
-                            show=False,save_fn=os.path.join(save_dir,''))
+                            show=False,save_fn=os.path.join(save_dir,f'all_models_plot_{p}.svg'))
+
 if __name__ == '__main__':
 
     fire.Fire(run_experiments)
