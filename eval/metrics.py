@@ -69,11 +69,11 @@ def assess_gmm_fit(y,yhat):
         most_common_label,_ = mode(pred_labels,nan_policy='omit')
         pred_inds = yhat == most_common_label
 
-        true_positives = np.sum((inds == 1) and (pred_inds == 1))
-        false_positives = np.sum((inds == 0) and (pred_inds == 1))
+        true_positives = np.sum(((inds == 1) + (pred_inds == 1)) == 2) # indices should be 2 if both are 1, 1 if one is, 0 if neither is
+        false_positives = np.sum(((inds == 0) + (pred_inds == 1)) == 2)
 
-        true_negatives = np.sum((inds == 0) and (pred_inds == 0))
-        false_negatives = np.sum((inds == 1) and (pred_inds == 0))
+        true_negatives = np.sum(((inds == 0) + (pred_inds == 0)) == 2)
+        false_negatives = np.sum(((inds == 1) + (pred_inds == 0)) == 2)
 
         prec = true_positives/(true_positives + false_positives)
         rec = true_positives/(true_positives + false_negatives)
