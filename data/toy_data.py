@@ -2,11 +2,13 @@ import numpy as np
 
 class LinearProjection():
 
-    def __init__(self,data_dim,project_dim):
+    def __init__(self,data_dim,project_dim,seed=None):
+
+        self.gen = np.random.default_rng(seed=seed)
 
         self.data_dim = data_dim
         self.project_dim=project_dim
-        self.w = np.random.randn(data_dim,project_dim)
+        self.w = self.gen.standard_normal(size=(data_dim,project_dim))
         #self.noise_sd = noise_sd
 
     def __call__(self,data,noise_sd=0.):
@@ -17,7 +19,7 @@ class LinearProjection():
 
         # expects data to be N x d, projection weight to be d x P
 
-        return data @ self.w + noise_sd * np.random.randn(data.shape[0],self.project_dim)
+        return data @ self.w + noise_sd * self.gen.standard_normal(size=(data.shape[0],self.project_dim))
 
     def un_project(self,data):
 
@@ -25,24 +27,24 @@ class LinearProjection():
     
 class IdentityProjection(LinearProjection):
 
-    def __init__(self,data_dim):
+    def __init__(self,data_dim,seed=None):
 
-        super(IdentityProjection,self).__init__(data_dim,data_dim)
+        super(IdentityProjection,self).__init__(data_dim,data_dim,seed=seed)
 
         self.w = np.eye(data_dim)
     
 class NonlinearProjection(LinearProjection):
 
-    def __init__(self,data_dim,project_dim,nonlinearity,inverse_nonlinearity):
+    def __init__(self,data_dim,project_dim,nonlinearity,inverse_nonlinearity,seed=None):
         ### nonlinearity must be invertible
 
-        super(NonlinearProjection,self).__init__(data_dim=data_dim,project_dim=project_dim)
+        super(NonlinearProjection,self).__init__(data_dim=data_dim,project_dim=project_dim,seed=seed)
         self.nonlinearity = nonlinearity
         self.inverse_nonlinearity=inverse_nonlinearity
 
     def project(self,data,noise_sd=0.):
 
-        return self.nonlinearity(super().project(data,noise_sd=0.)) + noise_sd * np.random.randn(data.shape[0],self.project_dim)
+        return self.nonlinearity(super().project(data,noise_sd=0.)) + noise_sd *self.gen.standard_normal(size=(data.shape[0],self.project_dim))
     
     def un_project(self, data):
         return super().un_project(self.inverse_nonlinearity(data))

@@ -92,7 +92,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
     elif linear:
 
-        proj = LinearProjection(data_dim=2,project_dim=proj_dim)
+        proj = LinearProjection(data_dim=2,project_dim=proj_dim,seed=seed)
 
     else:
 
@@ -100,7 +100,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         inverse_nonlinearity = lambda x: np.exp(x) - 1 if x > 0 else -np.exp(-x) + 1 
 
         proj = NonlinearProjection(data_dim=2,project_dim=proj_dim,\
-                                   nonlinearity=nonlinearity,inverse_nonlinearity=inverse_nonlinearity)
+                                   nonlinearity=nonlinearity,inverse_nonlinearity=inverse_nonlinearity,seed=seed)
 
 
     if not os.path.isdir(save_dir):
@@ -115,7 +115,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
     #print(labels.shape)
     base_precisions,base_recalls = assess_gmm_fit(labels,pred_labels)
 
-    loaders = get_loaders(data,test_size=0.4,seed=777,num_workers = 8,batch_size=512)
+    loaders = get_loaders(data,test_size=0.4,seed=seed,num_workers = 8,batch_size=512)
 
     precisions = [1e-2,1e-1,1e0,1e1,1e2,1e3] #np.logspace(-2,3,1)
     lr = 1e-3
