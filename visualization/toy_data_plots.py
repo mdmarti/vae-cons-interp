@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from visualization.utils import format_axis
 
 
 def make_toy_plot(true_latents,train_data,\
@@ -9,12 +10,11 @@ def make_toy_plot(true_latents,train_data,\
                         show=False,save_fn=''):
 
     fig_layout=\
-    [['Original "Latents"', 'Original "Latents"','Linear Decoder Latents', 'Linear Decoder Latents','Deep Linear Decoder Latents', 'Deep Linear Decoder Latents','Deep unconstrained decoder Latents','Deep unconstrained decoder Latents'],\
-    ['Original data','Original data','Linear Decoder Reconstructions', 'Linear Decoder Reconstructions','Deep Linear Decoder Reconstructions', 'Deep Linear Decoder Reconstructions','Deep unconstrained decoder Reconstructions','Deep unconstrained decoder Reconstructions']]
+    [['Original "Latents"', 'Original "Latents"','Linear Decoder Latents', 'Linear Decoder Latents','Deep Linear Decoder Latents', 'Deep Linear Decoder Latents','Deep unconstrained decoder Latents','Deep unconstrained decoder Latents','Nonlinear regularized decoder Latents','Nonlinear regularized decoder Latents'],\
+    ['Original data','Original data','Linear Decoder Reconstructions', 'Linear Decoder Reconstructions','Deep Linear Decoder Reconstructions', 'Deep Linear Decoder Reconstructions','Deep unconstrained decoder Reconstructions','Deep unconstrained decoder Reconstructions','nonlinear regularized decoder Reconstructions','nonlinear regularized decoder Reconstructions']]
 
-    plt.close('all')
-    fig = plt.Figure(figsize=(10,5))
-    axs = fig.subplot_mosaic(fig_layout)
+    #plt.close('all')
+    fig,axs = plt.subplot_mosaic(fig_layout,figsize=(20,5))
     labels = np.unique(true_labels)
     for label in labels:
         data_inds = true_labels == label
@@ -30,6 +30,19 @@ def make_toy_plot(true_latents,train_data,\
         axs['Deep unconstrained decoder Latents'].scatter(nonlinear_latents[data_inds,0],nonlinear_latents[data_inds,1],label='Deep nonlinear embedding')
         axs['Deep unconstrained decoder Reconstructions'].scatter(nonlinear_recons[data_inds,0],nonlinear_recons[data_inds,1],label='Deep nonlinear reconstruction')
 
+    for key in axs.keys():
+        ax = axs[key]
+        ax = format_axis(ax,xlabel='dim 1',ylabel='dim 2',title=key,\
+                         xticks=ax.get_xticks(),
+                         yticks=ax.get_yticks(),
+                         xlims=ax.get_xlim(),
+                         ylims=ax.get_ylim())
+
     plt.tight_layout()
+    if show():
+        plt.show()
+    elif save_fn != '':
+        plt.savefig(save_fn)
+    plt.close()
 
     
