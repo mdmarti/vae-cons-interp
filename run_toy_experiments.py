@@ -105,7 +105,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         os.mkdir(save_dir)
     latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=1.5)
 
-    l1_lip_proj = l1norm(proj.w)
+    l1_lip_proj = l1norm(torch.from_numpy(proj.w))
 
     base_model = GMM(n_components=4,covariance_type='full',n_init=10)
     pred_labels = base_model.fit_predict(data)
