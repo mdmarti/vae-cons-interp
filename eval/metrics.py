@@ -64,7 +64,7 @@ def assess_gmm_fit(y,yhat):
     precisions,recalls=[],[]
     for label in true_labels:
          
-        inds = true_labels == label
+        inds = y == label
         pred_labels = yhat[inds]
         most_common_label,_ = mode(pred_labels,nan_policy='omit')
         pred_inds = yhat == most_common_label
