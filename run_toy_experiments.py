@@ -83,7 +83,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
 
     return log_probs,kls,embeddings,recons
 
-def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False):
+def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99):
 
 
     if identity:
@@ -105,7 +105,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
-    latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=0.75)
+    latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=0.75,seed=seed)
 
     l1_lip_proj = l1norm(torch.from_numpy(proj.w))
 

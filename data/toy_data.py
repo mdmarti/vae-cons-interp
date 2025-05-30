@@ -47,10 +47,10 @@ class NonlinearProjection(LinearProjection):
     def un_project(self, data):
         return super().un_project(self.inverse_nonlinearity(data))
 
-def generate_mixture_dataset(projection,n_samples=100,proj_sd=0.):
+def generate_mixture_dataset(projection,n_samples=100,proj_sd=0.,seed=None):
 
     ## play around with parameters here
-    generator = np.random.default_rng()
+    generator = np.random.default_rng(seed=seed)
     
     mixture_weights = [0.25,0.1,0.3,0.35]
     mu1,mu2,mu3,mu4 = np.array([-0.05,1]),np.array([1,0]),np.array([2,0]),np.array([-0.5,-0.25])
