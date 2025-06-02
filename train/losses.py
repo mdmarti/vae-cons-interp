@@ -76,7 +76,7 @@ def ELBO_linear_encouragement(target,model_output,model_decoder,recon_precision=
     for name,w in model_decoder.named_parameters():
 
         if 'nonlinearity' in name:
-            penalty += (w**2).sum()
+            penalty = penalty + (w**2).sum()
 
     return neg_lp.mean(),kl.mean()+penalty * weight_penalty
 
