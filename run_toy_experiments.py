@@ -154,7 +154,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
     precision_pts = np.array([1] + list(10*np.arange(1,11)))
     latents,data,labels,med_dist = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=proj_sd,seed=seed)
 
-    closest_pt = precision_pts[np.argmin(np.abs(precision_pts - med_dist))]
+    closest_pt = 100/precision_pts[np.argmin(np.abs(precision_pts - med_dist))]
     l1_lip_proj = l1norm(torch.from_numpy(proj.w))
 
     base_model = GMM(n_components=4,covariance_type='full',n_init=10)
@@ -165,7 +165,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
     loaders = get_loaders(data,test_size=0.4,seed=seed,num_workers = 8,batch_size=512)
 
-    precisions = np.array([closest_pt/4,closest_pt/2,closest_pt,closest_pt*2,closest_pt*4])*100 #np.logspace(-2,3,1)
+    precisions = [closest_pt/4,closest_pt/2,closest_pt,closest_pt*2,closest_pt*4] #np.logspace(-2,3,1)
     lr = 1e-3
     for p in precisions:
 
