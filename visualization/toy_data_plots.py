@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from visualization.utils import format_axis
+from sklearn.decomposition import PCA
 
 
 def make_toy_plot(true_latents,train_data,\
@@ -16,6 +17,12 @@ def make_toy_plot(true_latents,train_data,\
     #plt.close('all')
     fig,axs = plt.subplot_mosaic(fig_layout,figsize=(20,5))
     labels = np.unique(true_labels)
+
+    if train_data.shape[1] > 2:
+        train_data = PCA(n_components=2).fit_transform(train_data)
+        linear_recons = PCA(n_components=2).fit_transform(linear_recons)
+        deep_linear_recons = PCA(n_components=2).fit_transform(deep_linear_recons)
+        nonlinear_recons = PCA(n_components=2).fit_transform(nonlinear_recons)
     for label in labels:
         data_inds = true_labels == label
         axs['Original "Latents"'].scatter(true_latents[data_inds,0],true_latents[data_inds,1],label='Generating data')
