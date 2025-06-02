@@ -85,7 +85,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
 
     return log_probs,kls,embeddings,recons
 
-def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99):
+def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99,proj_sd=0.08):
 
 
     if identity:
@@ -107,7 +107,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
-    latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=0.75,seed=seed)
+    latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=proj_sd,seed=seed)
 
     l1_lip_proj = l1norm(torch.from_numpy(proj.w))
 
@@ -119,14 +119,14 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
     loaders = get_loaders(data,test_size=0.4,seed=seed,num_workers = 8,batch_size=512)
 
-    precisions = [1e-2,1e-1,1e0,1e1,1e2,1e3] #np.logspace(-2,3,1)
+    precisions = [1e-2,1e-1,1e0,1e1,1e2,5e2] #np.logspace(-2,3,1)
     lr = 1e-3
     for p in precisions:
 
         print(f'now fitting for precision = {p}')
         ##### Linaer model #######
         vae_linear_lps,vae_linear_kls,vae_linearlatents,vae_linearrecons = run_helper(save_dir,model_type='linear',precision=p,\
-                                                        loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
+                                                           loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=0,decoder_activation=nn.Identity())
 
