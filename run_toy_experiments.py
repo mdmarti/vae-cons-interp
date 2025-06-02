@@ -53,7 +53,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
         while n_attempts < 5 and not done_training:
 
             try:
-                vae,opt,start_epoch = find_create_model(model_path)
+                vae,opt,start_epoch = find_create_model(model_prefix)
                 if start_epoch >= nEpochs:
                     done_training = True
                     with open(train_stats_path,'r') as f:
