@@ -1,4 +1,6 @@
 import numpy as np 
+import sklearn
+import os
 
 class LinearProjection():
 
@@ -75,5 +77,7 @@ def generate_mixture_dataset(projection,n_samples=100,proj_sd=0.,seed=None):
     data_samples = mu_samples + np.einsum('nkp,np->nk',cov_samples,data_samples)
 
     projected_samples = projection(data_samples,proj_sd)
+    pairwise_dists = sklearn.metrics.pairwise_distances(projected_samples,n_jobs=len(os.sched_getaffinity(0)))[np.tril_indices(n_samples,k=1)]
+    median_dist = np.median(pairwise_dists)
     #print(data_samples.shape)
-    return data_samples,projected_samples,sample_labels
+    return data_samples,projected_samples,sample_labels, median_dist

@@ -25,7 +25,7 @@ def find_create_model(target_model_prefix):
     if len(current_matching_model_files) == 0:
         return None,None,0
 
-    save_epochs = [int(fp.split('precision_')[-1].split('.tar')[0]) for fp in current_matching_model_files]
+    save_epochs = [int(fp.split('checkpoint_')[-1].split('.tar')[0]) for fp in current_matching_model_files]
     file_order = np.argsort(save_epochs)
     max_epoch = save_epochs[file_order[-1]]
     most_recent_model=current_matching_model_files[file_order[-1]]
@@ -130,7 +130,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
 
 def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99,proj_sd=0.08):
 
-
+    n_workers = len(os.sched_getaffinity(0))
     if identity:
 
         proj = IdentityProjection(data_dim=2)
@@ -150,8 +150,11 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
-    latents,data,labels = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=proj_sd,seed=seed)
 
+    precision_pts = np.array([1] + list(10*np.arange(1,11)))
+    latents,data,labels,med_dist = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=proj_sd,seed=seed)
+
+    closest_pt = precision_pts[np.argmin(np.abs(precision_pts - med_dist))]
     l1_lip_proj = l1norm(torch.from_numpy(proj.w))
 
     base_model = GMM(n_components=4,covariance_type='full',n_init=10)
@@ -162,7 +165,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
     loaders = get_loaders(data,test_size=0.4,seed=seed,num_workers = 8,batch_size=512)
 
-    precisions = [1e-2,1e-1,1e0,1e1,1e2,5e2] #np.logspace(-2,3,1)
+    precisions = np.array([closest_pt/4,closest_pt/2,closest_pt,closest_pt*2,closest_pt*4])*100 #np.logspace(-2,3,1)
     lr = 1e-3
     for p in precisions:
 
