@@ -14,15 +14,34 @@ import os
 from sklearn.mixture import GaussianMixture as GMM
 from eval.eval import train_test_plot,embedding_plot
 import json
+import glob
 from visualization.toy_data_plots import make_toy_plot
 import fire
+
+def find_create_model(target_model_prefix):
+    #target_fp = target_model_path.split('/')[-1]
+    #target_prefix = target_fp.split('_*precision*.tar')[0]
+    current_matching_model_files = glob.glob(target_model_prefix + '*.tar')
+    if len(current_matching_model_files) == 0:
+        return None,None,0
+
+    save_epochs = [int(fp.split('precision_')[-1].split('.tar')[0]) for fp in current_matching_model_files]
+    file_order = np.argsort(save_epochs)
+    max_epoch = save_epochs[file_order[-1]]
+    most_recent_model=current_matching_model_files[file_order[-1]]
+
+    
+    vae,opt,scheduler = load_model(most_recent_model)
+    return vae,opt, max_epoch
 
 def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr=1e-3,
                n_layers_shared=4,n_layers_private=3,data_dim=1000,hidden_dim=125,latent_dim=2,
                device='default',
                n_layers_decoder=7,decoder_activation=nn.GELU()):
 
-    model_path = os.path.join(save_dir,f'vae_{model_type}decoder_{precision}precision_final.tar')
+    model_path = os.path.join(save_dir,f'vae_{model_type}decoder_{precision}precision_{nEpochs}.tar')
+    model_prefix = os.path.join(save_dir,f'vae_{model_type}decoder_{precision}precision_')
+    
     train_stats_path = os.path.join(save_dir,f'train_stats_{model_type}_{precision}.json')
     embed_path = os.path.join(save_dir,f'embeddings_recons_{model_type}_{precision}.json')
     
@@ -34,37 +53,57 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
         while n_attempts < 5 and not done_training:
 
             try:
-                enc = ProbabilisticEncoder(n_layers_shared=n_layers_shared,n_layers_private=n_layers_private,
-                                        data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,device=device)
-                
-                if model_type == 'regularized_nonlinear':
-                    dec = RegularizedDecoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
-                                activation=decoder_activation,device=device)
-                    loss = lambda target,model_out : ELBO_linear_encouragement(target,model_out,dec,recon_precision=precision,weight_penalty=1) ### try this out on monday
-                else:
-                    dec = Decoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
-                                activation=decoder_activation,device=device)
+                vae,opt,start_epoch = find_create_model(model_path)
+                if start_epoch >= nEpochs:
+                    done_training = True
+                    with open(train_stats_path,'r') as f:
+                        train_stats = json.load(f)
+                    log_probs=train_stats['lp']
+                    kls=train_stats['kl']
+                            
+                    with open(embed_path,'r') as f:
+                        model_outputs = json.load(f)
+                    embeddings,recons=np.array(model_outputs['embeddings']),np.array(model_outputs['recons'])
+                    train_test_plot(log_probs,kls,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
+                                save_fn=os.path.join(save_dir,f'{model_type}_{precision}_traintest.svg'))
+                    embedding_plot(embeddings,recons,data,labels,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
+                                    save_fn=os.path.join(save_dir,f'{model_type}_{precision}_embeds.svg'))
+
+                    return log_probs,kls,embeddings,recons
+
+                if start_epoch == 0:
+                    enc = ProbabilisticEncoder(n_layers_shared=n_layers_shared,n_layers_private=n_layers_private,
+                                            data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,device=device)
                     
-                vae = VariationalAutoEncoder(enc,dec,LowRankMultivariateNormal,out_type='params')
+                    if model_type == 'regularized_nonlinear':
+                        dec = RegularizedDecoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
+                                    activation=decoder_activation,device=device)
+                        loss = lambda target,model_out : ELBO_linear_encouragement(target,model_out,dec,recon_precision=precision,weight_penalty=1) ### try this out on monday
+                    else:
+                        dec = Decoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
+                                    activation=decoder_activation,device=device)
+                        
+                    vae = VariationalAutoEncoder(enc,dec,LowRankMultivariateNormal,out_type='params')
+                    opt=None
                 vae,opt,scheduler,log_probs,kls = train(vae,loaders,loss=loss,
-                                                    nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-2)
+                                                    nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-2,start_epoch=start_epoch,opt =opt,save_freq=100,save_dir=save_dir)
                 done_training=True 
             except:
                 print("bad params, restarting")
                 n_attempts += 1
+        if done_training:
+            save_model(vae,opt,model_path)
+            embeddings = vae.encode(torch.from_numpy(data).to(vae.device).to(torch.float32))[0]
+            recons= vae.decode(embeddings).detach().cpu().numpy()
+            embeddings = embeddings.detach().cpu().numpy()
 
-        save_model(vae,opt,model_path)
-        embeddings = vae.encode(torch.from_numpy(data).to(vae.device).to(torch.float32))[0]
-        recons= vae.decode(embeddings).detach().cpu().numpy()
-        embeddings = embeddings.detach().cpu().numpy()
+            train_stats = {'lp':log_probs,'kl':kls}
+            model_outputs = {'embeddings':embeddings.tolist(),'recons':recons.tolist()}
 
-        train_stats = {'lp':log_probs,'kl':kls}
-        model_outputs = {'embeddings':embeddings.tolist(),'recons':recons.tolist()}
-
-        with open(train_stats_path,'w') as f:
-            json.dump(train_stats,f)
-        with open(embed_path,'w') as f:
-            json.dump(model_outputs,f)
+            with open(train_stats_path,'w') as f:
+                json.dump(train_stats,f)
+            with open(embed_path,'w') as f:
+                json.dump(model_outputs,f)
 
     else:
         vae,opt,scheduler = load_model(model_path)
@@ -77,13 +116,17 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
         with open(embed_path,'r') as f:
             model_outputs = json.load(f)
         embeddings,recons=np.array(model_outputs['embeddings']),np.array(model_outputs['recons'])
+        done_training=True
 
-    train_test_plot(log_probs,kls,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
-                   save_fn=os.path.join(save_dir,f'{model_type}_{precision}_traintest.svg'))
-    embedding_plot(embeddings,recons,data,labels,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
-                    save_fn=os.path.join(save_dir,f'{model_type}_{precision}_embeds.svg'))
+    if done_training:
+        train_test_plot(log_probs,kls,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
+                    save_fn=os.path.join(save_dir,f'{model_type}_{precision}_traintest.svg'))
+        embedding_plot(embeddings,recons,data,labels,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
+                        save_fn=os.path.join(save_dir,f'{model_type}_{precision}_embeds.svg'))
 
-    return log_probs,kls,embeddings,recons
+        return log_probs,kls,embeddings,recons
+    
+    return [],[],[],[]
 
 def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99,proj_sd=0.08):
 

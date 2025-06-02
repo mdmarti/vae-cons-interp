@@ -78,14 +78,14 @@ def load_model(location):
 
     return model,opt,scheduler
 
-def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_norm_grad=1e-2):
+def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_norm_grad=1e-2,opt =None,start_epoch=0):
 
-
-    opt = Adam(model.parameters(),lr=lr)
+    if opt == None:
+        opt = Adam(model.parameters(),lr=lr)
     scheduler = ReduceLROnPlateau(opt,factor=0.75,patience=5,min_lr=1e-10)
 
     train_recon,val_recon,train_reg,val_reg = [],[],[],[]
-    for epoch in tqdm(range(nEpochs),desc='training...'):
+    for epoch in tqdm(range(start_epoch,nEpochs+1),desc='training...'):
 
         model.train()
 
