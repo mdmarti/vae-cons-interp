@@ -23,7 +23,7 @@ def find_create_model(target_model_prefix):
     #target_prefix = target_fp.split('_*precision*.tar')[0]
     current_matching_model_files = glob.glob(target_model_prefix + '*.tar')
     if len(current_matching_model_files) == 0:
-        return None,None,0
+        return None,None,1
 
     save_epochs = [int(fp.split('checkpoint_')[-1].split('.tar')[0]) for fp in current_matching_model_files]
     file_order = np.argsort(save_epochs)
