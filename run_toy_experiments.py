@@ -40,7 +40,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
                n_layers_decoder=7,decoder_activation=nn.GELU()):
 
     model_path = os.path.join(save_dir,f'vae_{model_type}decoder_{precision}precision_checkpoint_{nEpochs}.tar')
-    model_prefix = os.path.join(save_dir,f'vae_{model_type}decoder_{precision}precision_')
+    model_prefix = model_path.split('.tar')[0]
     
     train_stats_path = os.path.join(save_dir,f'train_stats_{model_type}_{precision}.json')
     embed_path = os.path.join(save_dir,f'embeddings_recons_{model_type}_{precision}.json')
@@ -86,7 +86,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
                     vae = VariationalAutoEncoder(enc,dec,LowRankMultivariateNormal,out_type='params')
                     opt=None
                 vae,opt,scheduler,log_probs,kls = train(vae,loaders,loss=loss,
-                                                    nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-2,start_epoch=start_epoch,opt =opt,save_freq=100,save_dir=save_dir)
+                                                    nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-2,start_epoch=start_epoch,opt =opt,save_freq=100,model_prefix=model_prefix)
                 done_training=True 
             except:
                 print("bad params, restarting")

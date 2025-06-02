@@ -78,7 +78,7 @@ def load_model(location):
 
     return model,opt,scheduler
 
-def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_norm_grad=1e-2,opt =None,start_epoch=0):
+def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_norm_grad=1e-2,opt =None,start_epoch=0,save_freq=-1,model_prefix='model'):
 
     if opt == None:
         opt = Adam(model.parameters(),lr=lr)
@@ -130,6 +130,9 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_
 
             l = val_recon + val_reg
             #scheduler.step(vl+vr)
+
+        if (save_freq > 0) and (((epoch +1) % save_freq) == 0):
+            save_model(model,opt,model_prefix + str(epoch) + '.tar')
 
         if epoch % vis_freq == 0:
 
