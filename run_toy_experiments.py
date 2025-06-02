@@ -71,7 +71,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
 
                     return log_probs,kls,embeddings,recons
 
-                if start_epoch == 0:
+                if start_epoch == 1:
                     enc = ProbabilisticEncoder(n_layers_shared=n_layers_shared,n_layers_private=n_layers_private,
                                             data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,device=device)
                     
