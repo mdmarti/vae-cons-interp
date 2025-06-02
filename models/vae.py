@@ -108,7 +108,7 @@ class LinearEncouragementLayer(nn.Module):
 
     def __init__(self,in_size,out_size,device='default'):
 
-        super().__init__()
+        super(LinearEncouragementLayer,self).__init__()
         if device == 'default':
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
 

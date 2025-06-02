@@ -54,6 +54,13 @@ def load_model(location):
                       latent_dim=decoder_details['latent_dim'],
                       activation=decoder_details['activation'],
                       device=decoder_details['device'])
+    elif decoder_type =='regularized MLP' :
+        dec = RegularizedDecoder(n_layers=decoder_details['n_layers'],
+                      data_dim=decoder_details['data_dim'],
+                      hidden_dim=decoder_details['hidden_dim'],
+                      latent_dim=decoder_details['latent_dim'],
+                      activation=decoder_details['activation'],
+                      device=decoder_details['device'])
     else:
         raise NotImplementedError
     
