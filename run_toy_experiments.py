@@ -40,7 +40,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
                n_layers_decoder=7,decoder_activation=nn.GELU()):
 
     model_path = os.path.join(save_dir,f'vae_{model_type}decoder_{precision}precision_checkpoint_{nEpochs}.tar')
-    model_prefix = model_path.split('.tar')[0]
+    model_prefix = model_path.split(f'{nEpochs}.tar')[0]
     
     train_stats_path = os.path.join(save_dir,f'train_stats_{model_type}_{precision}.json')
     embed_path = os.path.join(save_dir,f'embeddings_recons_{model_type}_{precision}.json')
