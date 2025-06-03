@@ -4,6 +4,7 @@ import numpy as np
 from data.toy_data import *
 from data.data_utils import *
 from train.losses import *
+from train.regularization import *
 from train.train import train,save_model,load_model
 
 from models.vae import *
@@ -75,16 +76,18 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
                     return log_probs,kls,embeddings,recons
 
                 if (start_epoch == 1) or (n_attempts > 0):
+                    start_epoch=1
+                    
                     enc = ProbabilisticEncoder(n_layers_shared=n_layers_shared,n_layers_private=n_layers_private,
                                             data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,device=device)
                     
                     if model_type == 'regularized_nonlinear':
                         dec = RegularizedDecoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
                                     activation=decoder_activation,device=device)
-                        loss = lambda target,model_out : ELBO_linear_encouragement(target,model_out,dec,recon_precision=precision,weight_penalty=1) ### try this out on monday
                     else:
                         dec = Decoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
                                     activation=decoder_activation,device=device)
+                       
                         
                     vae = VariationalAutoEncoder(enc,dec,LowRankMultivariateNormal,out_type='params')
                     opt=None

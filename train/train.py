@@ -78,13 +78,13 @@ def load_model(location):
 
     return model,opt,scheduler
 
-def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_norm_grad=1e-2,opt =None,start_epoch=0,save_freq=-1,model_prefix='model'):
+def train(model,dataloaders,loss,regularizer = None, nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_norm_grad=1e-2,opt =None,start_epoch=0,save_freq=-1,model_prefix='model'):
 
     if opt == None:
         opt = Adam(model.parameters(),lr=lr)
     scheduler = ReduceLROnPlateau(opt,factor=0.75,patience=5,min_lr=1e-10)
 
-    train_recon,val_recon,train_reg,val_reg = [],[],[],[]
+    train_recon,val_recon,train_kl,val_kl,train_reg,val_reg = [],[],[],[],[],[]
     for epoch in tqdm(range(start_epoch,nEpochs+1),desc='training...'):
 
         model.train()
@@ -96,40 +96,51 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_
 
             model_out = model(batch)
 
-            recon_loss, latent_reg = loss(batch,model_out)
+            recon_loss, kl = loss(batch,model_out)
 
-            l = recon_loss + latent_reg
+            l = recon_loss + kl
 
-            
+            if regularizer != None:
+                reg = regularizer(model.decoder)
+                l = l + reg
+                train_reg.append(reg.item())
+            else:
+                train_reg.append(0.)
             l.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=max_norm_grad)
             opt.step()
             model.decoder.regularize()
 
             train_recon.append(recon_loss.item())
-            train_reg.append(latent_reg.item())
+            train_kl.append(kl.item())
+            
 
         if epoch % val_freq == 0:
 
             model.eval()
 
-            vl,vr = 0.,0.
+            vl,vk,vr = 0.,0.,0.
             for _, batch in enumerate(dataloaders['val']):
                 batch=batch.to(model.device).to(torch.float32)
 
                 model_out = model(batch)
 
-                recon_loss, latent_reg = loss(batch,model_out)
+                recon_loss, kl = loss(batch,model_out)
 
                 vl += recon_loss.item()
-                vr += latent_reg.item()
+                vk += kl.item()
+                if regularizer != None:
+                    reg = regularizer(model.decoder)
+                    vr += reg.item()
             vl /= len(dataloaders['val'])
+            vk /= len(dataloaders['val'])
             vr /= len(dataloaders['val'])
             val_recon.append((bi,vl))
+            val_kl.append((bi,vk))
             val_reg.append((bi,vr))
 
-            l = val_recon + val_reg
-            #scheduler.step(vl+vr)
+            #l = val_recon + val_kl
+            #scheduler.step(vl+vk)
 
         if (save_freq > 0) and (((epoch +1) % save_freq) == 0):
             save_model(model,opt,model_prefix + str(epoch) + '.tar')
@@ -139,7 +150,8 @@ def train(model,dataloaders,loss,nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_
             pass
 
 
-    return model,opt,scheduler,(train_recon,val_recon),(train_reg,val_reg)
+    return model,opt,scheduler,(train_recon,val_recon),(train_kl,val_kl),(train_reg,val_reg)
+
 
 
 

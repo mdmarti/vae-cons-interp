@@ -11,7 +11,7 @@ def train_test_plot(recons,regularization,label='',show=False,save_fn='train_tes
     train_kls,test_kls=np.array(train_kls),np.array(test_kls)
     
     fig,(ax1,ax2) = plt.subplots(nrows=1,ncols=2,figsize=(10,5))
-    ax1.plot(train_recons,label='Train')
+    ax1.plot(train_recons[:,0],label='Train')
     ax1.plot(test_recons[:,0],test_recons[:,1],label='Validation')
 
     #xlim,ylim = ax1.get_xlim(),ax1.get_ylim()
@@ -25,7 +25,7 @@ def train_test_plot(recons,regularization,label='',show=False,save_fn='train_tes
     
     #ax.set_yscale('log')
     
-    ax2.plot(train_kls)
+    ax2.plot(train_kls[:,0])
     ax2.plot(test_kls[:,0],test_kls[:,1])
     ax2 = format_axis(ax2,xlabel='Gradient steps',ylabel='KL Divergence',
                       xticks=ax2.get_xticks(),

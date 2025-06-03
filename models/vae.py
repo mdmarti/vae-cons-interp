@@ -83,40 +83,37 @@ class ProbabilisticEncoder(Encoder):
         mu,L,d = self.mu_net(x),self.L_net(x),self.d_net(x)
 
         return mu, L.unsqueeze(-1), d.exp()
-
-class LinearPlusNonlinear(nn.Module):
-
-    def __init__(self,in_size,out_size,nonlinearity=nn.GELU(),device='default'):
-
-        super(LinearPlusNonlinear,self).__init__()
-
-        if device == 'default':
-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.linear = nn.Linear(in_size,out_size,device=device)
-        self.nonlinear = nn.Linear(in_size,out_size,device=device)
-        self.nonlinearity=nonlinearity
-
-
-    def forward(self,x,return_both=False):
-
-        if return_both:
-            return self.linear(x), self.nonlinearity(self.nonlinear(x))
-        else:
-            return self.linear(x) + self.nonlinearity(self.nonlinear(x))
         
 class LinearEncouragementLayer(nn.Module):
 
-    def __init__(self,in_size,out_size,device='default'):
+    def __init__(self,in_size,out_size,activation,device='default'):
 
         super(LinearEncouragementLayer,self).__init__()
         if device == 'default':
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.linear = nn.Linear(in_size,out_size,device=device)
-        self.nonlinearity =nn.PReLU(num_parameters =out_size)
+        self.nonlinearity =nn.PReLU(num_parameters =1) #out_size -- one extra parameter per layer might be easier to fit
 
     def forward(self,x):
         return self.nonlinearity(self.linear(x))
+    
+class LinearEncouragementLayer_v2(nn.Module):
+
+    def __init__(self,in_size,out_size,activation,device='default'):
+
+        super(LinearEncouragementLayer_v2,self).__init__()
+
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        self.linear = nn.Linear(in_size,out_size,device=device)
+        self.nonlinearity = nn.Linear(in_size,out_size,device=device)
+        self.activation=activation 
+
+    def forward(self,x):
+
+        return self.linear(x) + self.activation(self.nonlinearity(x))
     
 class LipschitzPlusUnCon(nn.Module):
 
@@ -196,15 +193,15 @@ class Decoder(nn.Module):
 
 class RegularizedDecoder(Decoder):
 
-    def __init__(self, n_layers, data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='default'):
+    def __init__(self, n_layers, data_dim, hidden_dim, latent_dim,layer_type, activation=nn.GELU(),device='default'):
         super().__init__(n_layers, data_dim, hidden_dim, latent_dim, activation, device)
 
         if n_layers == 0:
-            self.net = LinearEncouragementLayer(latent_dim,data_dim)
+            self.net = layer_type(latent_dim,data_dim)
         else:
-            layers = [LinearEncouragementLayer(latent_dim,hidden_dim)]
+            layers = [layer_type(latent_dim,hidden_dim,activation)]
             for _ in range(n_layers - 1):
-                layers += [LinearEncouragementLayer(hidden_dim,hidden_dim)]
+                layers += [layer_type(hidden_dim,hidden_dim,activation)]
             layers += [nn.Linear(hidden_dim,data_dim)]
 
             self.net = nn.Sequential(*layers)
@@ -217,7 +214,7 @@ class RegularizedDecoder(Decoder):
             'data_dim':data_dim,
             'hidden_dim':hidden_dim,
             'latent_dim':latent_dim,
-            'activation':activation,
+            'activation':nn.Identity(),
             'device':device,
             'type': 'regularized MLP'
         }
@@ -305,17 +302,21 @@ class AutoEncoder(nn.Module):
 
         return self.decoder(z)
     
+
+VALID_OUT_TYPES=['dist','params']
 class VariationalAutoEncoder(AutoEncoder):
 
     def __init__(self, encoder, decoder, latent_distribution, device='default',out_type='dist'):
         super().__init__(encoder, decoder, device)
 
         self.latent_distribution=latent_distribution
+        assert out_type in VALID_OUT_TYPES,print(f"Output type of VAE must be in {VALID_OUT_TYPES},you chose {out_type}")
         self.out_type = out_type
         self.spec_dict={
             'type':'VAE',
             'device':device,
-            'latent_dist':latent_distribution
+            'latent_dist':latent_distribution,
+            'output_type':self.out_type
         }
 
 
@@ -333,6 +334,7 @@ class VariationalAutoEncoder(AutoEncoder):
             return xhat,z,latent_dist
         elif self.out_type == 'params':
             return xhat,z,latent_params
+
 
 
 
