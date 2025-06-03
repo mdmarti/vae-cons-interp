@@ -133,7 +133,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
 
 def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99,proj_sd=0.08):
 
-    n_workers = len(os.sched_getaffinity(0))
+    num_workers = len(os.sched_getaffinity(0))
     if identity:
 
         proj = IdentityProjection(data_dim=2)
@@ -157,7 +157,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
     precision_pts = np.array([1] + list(10*np.arange(1,11)))
     latents,data,labels,med_dist = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=proj_sd,seed=seed)
 
-    closest_pt = 100/precision_pts[np.argmin(np.abs(precision_pts - med_dist))]
+    closest_pt = 50/precision_pts[np.argmin(np.abs(precision_pts - med_dist))]
     l1_lip_proj = l1norm(torch.from_numpy(proj.w))
 
     base_model = GMM(n_components=4,covariance_type='full',n_init=10)
@@ -166,10 +166,11 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
     #print(labels.shape)
     base_precisions,base_recalls = assess_gmm_fit(labels,pred_labels)
 
-    loaders = get_loaders(data,test_size=0.4,seed=seed,num_workers = 8,batch_size=512)
+    loaders = get_loaders(data,test_size=0.4,seed=seed,num_workers = num_workers,batch_size=512)
 
     precisions = [closest_pt/4,closest_pt/2,closest_pt,closest_pt*2,closest_pt*4] #np.logspace(-2,3,1)
     lr = 1e-3
+    print(f"now training models for {proj_dim}-dimensional data")
     for p in precisions:
 
         print(f'now fitting for precision = {p}')
