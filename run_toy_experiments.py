@@ -30,8 +30,11 @@ def find_create_model(target_model_prefix):
     max_epoch = save_epochs[file_order[-1]]
     most_recent_model=current_matching_model_files[file_order[-1]]
 
+    print(f'found an existing checkpoint, loading epoch {max_epoch} from {most_recent_model}')
+
     
     vae,opt,scheduler = load_model(most_recent_model)
+    vae.out_type='params'
     return vae,opt, max_epoch
 
 def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr=1e-3,
@@ -71,7 +74,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
 
                     return log_probs,kls,embeddings,recons
 
-                if start_epoch == 1:
+                if (start_epoch == 1) or (n_attempts > 0):
                     enc = ProbabilisticEncoder(n_layers_shared=n_layers_shared,n_layers_private=n_layers_private,
                                             data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,device=device)
                     
@@ -86,7 +89,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
                     vae = VariationalAutoEncoder(enc,dec,LowRankMultivariateNormal,out_type='params')
                     opt=None
                 vae,opt,scheduler,log_probs,kls = train(vae,loaders,loss=loss,
-                                                    nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-2,start_epoch=start_epoch,opt =opt,save_freq=100,model_prefix=model_prefix)
+                                                    nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-4,start_epoch=start_epoch,opt =opt,save_freq=100,model_prefix=model_prefix)
                 done_training=True 
             except:
                 print("bad params, restarting")
