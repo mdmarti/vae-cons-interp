@@ -157,7 +157,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
 
-    precision_pts = np.array([1] + list(10*np.arange(1,11)))
+    precision_pts = np.array([1] + list(10*np.arange(1,15)))
     latents,data,labels,med_dist = generate_mixture_dataset(n_samples=n_samples,projection=proj,proj_sd=proj_sd,seed=seed)
 
     closest_pt = 50/precision_pts[np.argmin(np.abs(precision_pts - med_dist))]

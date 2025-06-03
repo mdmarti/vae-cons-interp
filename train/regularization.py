@@ -9,7 +9,7 @@ def linear_encouragement_prelu(decoder,weight=1):
 
         
         if 'nonlinearity' in name:
-            penalty = penalty + ((w - 1).abs()).sum()
+            penalty = penalty + ((w - 1).abs()).pow(2).sum()
 
     return penalty * weight
 
@@ -19,7 +19,7 @@ def linear_encouragement_mat(decoder,weight=1):
     for name,w in decoder.named_parameters():
 
         if 'nonlinearity' in name:
-            penalty = penalty + w.abs().sum()
+            penalty = penalty + w.abs().pow(2).sum()
 
     return penalty * weight
 
