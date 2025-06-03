@@ -86,14 +86,17 @@ class ProbabilisticEncoder(Encoder):
         
 class LinearEncouragementLayer(nn.Module):
 
-    def __init__(self,in_size,out_size,activation,device='default'):
+    def __init__(self,in_size,out_size,activation,device='default',full_prelu=False):
 
         super(LinearEncouragementLayer,self).__init__()
         if device == 'default':
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.linear = nn.Linear(in_size,out_size,device=device)
-        self.nonlinearity =nn.PReLU(num_parameters =1) #out_size -- one extra parameter per layer might be easier to fit
+        if full_prelu:
+            self.nonlinearity =nn.PReLU(num_parameters =out_size) #out_size -- one extra parameter per layer might be easier to fit
+        else:
+            self.nonlinearity =nn.PReLU(num_parameters =1)
 
     def forward(self,x):
         return self.nonlinearity(self.linear(x))
