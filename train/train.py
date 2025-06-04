@@ -173,7 +173,7 @@ def train_cv_reg(model,dataloaders,loss,regularizer, nEpochs=200,lr=1e-3,val_fre
         final_elbo = -np.nanmean(np.array(val_recon)[:-10,1] - np.array(val_kl)[:-10,1])
         final_elbos.append(final_elbo)
     best_reg_weight = reg_weight_array[np.argmax(final_elbos)]
-    print('best regularization parameter on val set: {best_reg_weight}')
+    print(f'best regularization parameter on val set: {best_reg_weight}')
     best_reggie =  lambda model: regularizer(model,weight=best_reg_weight)
 
     model,opt,scheduler,(train_recon,val_recon),(train_kl,val_kl), (train_reg,val_reg) = train(model_copy,dataloaders=dataloaders,loss=loss,\
