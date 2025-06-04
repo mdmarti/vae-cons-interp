@@ -199,7 +199,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
     #print(labels.shape)
     base_precisions,base_recalls = assess_gmm_fit(labels,pred_labels)
 
-    loaders = get_loaders(data,labels=labels,test_size=0.4,seed=seed,num_workers = num_workers,batch_size=512)
+    loaders,(train_labs,val_labs,test_labs) = get_loaders(data,labels=labels,test_size=0.4,seed=seed,num_workers = num_workers,batch_size=512)
 
     precisions = [closest_pt/4,closest_pt/2,closest_pt,closest_pt*2,closest_pt*4] #np.logspace(-2,3,1)
     lr = 1e-3
@@ -209,7 +209,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         print(f'now fitting for precision = {p}')
         ##### Linaer model #######
         vae_linear_lps,vae_linear_kls,vae_linearlatents,vae_linearrecons = run_helper(save_dir,model_type='linear',precision=p,\
-                                                           loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
+                                                           loaders=loaders,data=data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=0,decoder_activation=nn.Identity(),encoder_activation=encoder_activation)
 
@@ -220,7 +220,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
         #### deep linear model ######
         vae_deeplinear_lps,vae_deeplinear_kls,vae_deeplinearlatents,vae_deeplinearrecons = run_helper(save_dir,model_type='deeplinear',precision=p,\
-                                                        loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
+                                                        loaders=loaders,data=data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.Identity(),encoder_activation=encoder_activation)
 
@@ -236,7 +236,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
         #### nonlinear model #########
         vae_nonlinear_lps,vae_nonlinear_kls,vae_nonlinearlatents,vae_nonlinearrecons = run_helper(save_dir,model_type='nonlinear',precision=p,\
-                                                        loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
+                                                        loaders=loaders,data=data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.GELU(),encoder_activation=encoder_activation)
         
@@ -249,7 +249,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         #### regularized nonlinear model prelu #####
 
         vae_regnonlinear_lps,vae_regnonlinear_kls,vae_regnonlinearlatents,vae_regnonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
-                                                        loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
+                                                        loaders=loaders,data=data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.GELU(),encoder_activation=encoder_activation)
         
@@ -262,7 +262,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
          #### regularized nonlinear model general #####
 
         vae_reg2nonlinear_lps,vae_reg2nonlinear_kls,vae_reg2nonlinearlatents,vae_reg2nonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
-                                                        loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
+                                                        loaders=loaders,data=data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.GELU(),reg_layer_type='mat',encoder_activation=encoder_activation)
         
