@@ -74,7 +74,7 @@ def generate_mixture_dataset(projection,n_samples=100,proj_sd=0.,seed=None):
 
     data_samples = generator.multivariate_normal(mean=np.zeros((2,)),cov=np.eye(2),size=(n_samples))
     #print(data_samples.shape)
-    data_samples = (mu_samples + np.einsum('nkp,np->nk',cov_samples,data_samples)) * 10
+    data_samples = (mu_samples + np.einsum('nkp,np->nk',cov_samples,data_samples)) *2
 
     projected_samples = projection(data_samples,proj_sd)
     pairwise_dists = sklearn.metrics.pairwise_distances(projected_samples,n_jobs=len(os.sched_getaffinity(0)))[np.tril_indices(n_samples,k=1)]
