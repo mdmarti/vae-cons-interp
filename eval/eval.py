@@ -3,15 +3,17 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from visualization.utils import format_axis
 
-def train_test_plot(recons,regularization,label='',show=False,save_fn='train_test_curves.svg'):
+def train_test_plot(recons,kls,regs,label='',show=False,save_fn='train_test_curves.svg'):
 
     (train_recons,test_recons) = recons
     train_recons,test_recons=np.array(train_recons),np.array(test_recons)
-    (train_kls,test_kls) = regularization
+    (train_kls,test_kls) = kls
     train_kls,test_kls=np.array(train_kls),np.array(test_kls)
+    (train_regs,test_regs) = regs
+    train_regs,test_regs = np.array(train_regs),np.array(test_regs)
     
-    fig,(ax1,ax2) = plt.subplots(nrows=1,ncols=2,figsize=(10,5))
-    ax1.plot(train_recons[:,0],label='Train')
+    fig,(ax1,ax2,ax3) = plt.subplots(nrows=1,ncols=3,figsize=(14,5))
+    ax1.plot(train_recons,label='Train')
     ax1.plot(test_recons[:,0],test_recons[:,1],label='Validation')
 
     #xlim,ylim = ax1.get_xlim(),ax1.get_ylim()
@@ -25,13 +27,25 @@ def train_test_plot(recons,regularization,label='',show=False,save_fn='train_tes
     
     #ax.set_yscale('log')
     
-    ax2.plot(train_kls[:,0])
+    ax2.plot(train_kls)
     ax2.plot(test_kls[:,0],test_kls[:,1])
     ax2 = format_axis(ax2,xlabel='Gradient steps',ylabel='KL Divergence',
                       xticks=ax2.get_xticks(),
                       yticks=ax2.get_yticks(),
                       xlims=ax2.get_xlim(),
                       ylims=ax2.get_ylim())
+    
+    
+    ax3.plot(train_regs)
+    ax3.plot(test_regs[:,0],test_regs[:,1])
+    ax3 = format_axis(ax3,xlabel='Gradient steps',ylabel='Additional regularization',
+                      xticks=ax3.get_xticks(),
+                      yticks=ax3.get_yticks(),
+                      xlims=ax3.get_xlim(),
+                      ylims=ax3.get_ylim())
+
+    
+
     #ax.set_yscale('log')
     #ax2.set_title("KL term")
     ax1.legend()
