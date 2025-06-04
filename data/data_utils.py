@@ -38,9 +38,9 @@ def get_loaders(data,labels = [],test_size = 0.4,seed=None,batch_size=256,num_wo
             X_train.append(train_class)
             X_val.append(val_class)
             X_test.append(test_class)
-            labs_train.append(np.array([d_class]*len(train_class)))
-            labs_test.append(np.array([d_class]*len(test_class)))
-            labs_val.append(np.array([d_class]*len(val_class)))
+            labs_train.append(np.array([label]*len(train_class)))
+            labs_test.append(np.array([label]*len(test_class)))
+            labs_val.append(np.array([label]*len(val_class)))
 
         X_train = np.vstack(X_train)
         X_val = np.vstack(X_val)
