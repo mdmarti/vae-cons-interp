@@ -203,8 +203,8 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
     #print(labels.shape)
     base_precisions,base_recalls = assess_gmm_fit(labels,pred_labels)
 
-    loaders,(train_labs,val_labs,test_labs) = get_loaders(data,labels=labels,test_size=0.4,seed=seed,num_workers = num_workers,batch_size=512)
-    test_data = loaders['test'].dataset.data
+    loaders,(train_labs,val_labs,test_labs),(train_data,val_data,test_data),(train_latents,val_latents,test_latents) = get_loaders(data,latents,labels=labels,test_size=0.4,seed=seed,num_workers = num_workers,batch_size=512)
+    #test_data = loaders['test'].dataset.data
 
     precisions = [closest_pt/4,closest_pt/2,closest_pt,closest_pt*2,closest_pt*4] #np.logspace(-2,3,1)
     lr = 1e-3
@@ -300,12 +300,12 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         ################################
         """
 
-        make_toy_plot(latents,data,vae_linearlatents,vae_linearrecons,\
+        make_toy_plot(test_latents,test_data,vae_linearlatents,vae_linearrecons,\
                       vae_deeplinearlatents,vae_deeplinearrecons,\
                         vae_nonlinearlatents,vae_nonlinearrecons,\
                             vae_regnonlinearlatents,vae_regnonlinearrecons,\
                             vae_reg2nonlinearlatents,vae_reg2nonlinearrecons,\
-                                labels,\
+                                test_labs,\
                             show=False,save_fn=os.path.join(save_dir,f'all_models_plot_{p}.svg'))
 
 if __name__ == '__main__':
