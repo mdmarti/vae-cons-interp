@@ -300,7 +300,10 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
         make_toy_plot(latents,data,vae_linearlatents,vae_linearrecons,\
                       vae_deeplinearlatents,vae_deeplinearrecons,\
-                        vae_nonlinearlatents,vae_nonlinearrecons,labels,\
+                        vae_nonlinearlatents,vae_nonlinearrecons,\
+                            vae_regnonlinearlatents,vae_regnonlinearrecons,\
+                            vae_reg2nonlinearlatents,vae_reg2nonlinearrecons,\
+                                labels,\
                             show=False,save_fn=os.path.join(save_dir,f'all_models_plot_{p}.svg'))
 
 if __name__ == '__main__':

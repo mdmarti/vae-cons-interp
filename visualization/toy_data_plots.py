@@ -7,15 +7,17 @@ from sklearn.decomposition import PCA
 def make_toy_plot(true_latents,train_data,\
                   linear_latents,linear_recons,\
                     deep_linear_latents,deep_linear_recons,\
-                        nonlinear_latents,nonlinear_recons,true_labels,
+                        nonlinear_latents,nonlinear_recons,
+                        nonlinear_prelureg_latents,nonlinear_prelureg_recons,
+                        nonlinear_matreg_latents,nonlinear_matreg_recons,true_labels,
                         show=False,save_fn=''):
 
     fig_layout=\
-    [['Original "Latents"', 'Original "Latents"','Linear Decoder Latents', 'Linear Decoder Latents','Deep Linear Decoder Latents', 'Deep Linear Decoder Latents','Deep unconstrained decoder Latents','Deep unconstrained decoder Latents','Nonlinear regularized decoder Latents','Nonlinear regularized decoder Latents'],\
-    ['Original data','Original data','Linear Decoder Reconstructions', 'Linear Decoder Reconstructions','Deep Linear Decoder Reconstructions', 'Deep Linear Decoder Reconstructions','Deep unconstrained decoder Reconstructions','Deep unconstrained decoder Reconstructions','nonlinear regularized decoder Reconstructions','nonlinear regularized decoder Reconstructions']]
+    [['Original "Latents"', 'Original "Latents"','Linear Decoder Latents', 'Linear Decoder Latents','Deep Linear Decoder Latents', 'Deep Linear Decoder Latents','Deep unconstrained decoder Latents','Deep unconstrained decoder Latents','Nonlinear regularized decoder Latents (prelu)','Nonlinear regularized decoder Latents (prelu)','Nonlinear regularized decoder Latents (prelu)','Nonlinear regularized decoder Latents (prelu)'],\
+    ['Original data','Original data','Linear Decoder Reconstructions', 'Linear Decoder Reconstructions','Deep Linear Decoder Reconstructions', 'Deep Linear Decoder Reconstructions','Deep unconstrained decoder Reconstructions','Deep unconstrained decoder Reconstructions','nonlinear regularized decoder Reconstructions (prelu)','nonlinear regularized decoder Reconstructions (prelu)','nonlinear regularized decoder Reconstructions (mat)','nonlinear regularized decoder Reconstructions (mat)']]
 
     #plt.close('all')
-    fig,axs = plt.subplot_mosaic(fig_layout,figsize=(20,5))
+    fig,axs = plt.subplot_mosaic(fig_layout,figsize=(25,5))
     labels = np.unique(true_labels)
 
     if train_data.shape[1] > 2:
@@ -36,6 +38,12 @@ def make_toy_plot(true_latents,train_data,\
 
         axs['Deep unconstrained decoder Latents'].scatter(nonlinear_latents[data_inds,0],nonlinear_latents[data_inds,1],label='Deep nonlinear embedding')
         axs['Deep unconstrained decoder Reconstructions'].scatter(nonlinear_recons[data_inds,0],nonlinear_recons[data_inds,1],label='Deep nonlinear reconstruction')
+
+        axs['Nonlinear regularized decoder Latents (prelu)'].scatter(nonlinear_prelureg_latents[data_inds,0],nonlinear_prelureg_latents[data_inds,1],label='Deep prelu reg nonlinear embedding')
+        axs['Nonlinear regularized decoder Reconstructions (prelu)'].scatter(nonlinear_prelureg_recons[data_inds,0],nonlinear_prelureg_recons[data_inds,1],label='Deep prelu reg nonlinear reconstruction')
+
+        axs['nonlinear regularized decoder Latents (mat)'].scatter(nonlinear_matreg_latents[data_inds,0],nonlinear_matreg_latents[data_inds,1],label='Deep matreg nonlinear embedding')
+        axs['nonlinear regularized decoder Reconstructions (mat)'].scatter(nonlinear_matreg_recons[data_inds,0],nonlinear_matreg_recons[data_inds,1],label='Deep matreg nonlinear reconstruction')
 
     for key in axs.keys():
         ax = axs[key]
