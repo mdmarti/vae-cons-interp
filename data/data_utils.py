@@ -1,7 +1,7 @@
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 import torch
-import os
+import numpy as np
 
 
 
@@ -20,11 +20,27 @@ class toy_dataset(Dataset):
         return torch.from_numpy(self.data[idx])
 
 
-def get_loaders(data,test_size = 0.4,seed=None,batch_size=256,num_workers=1):
+def get_loaders(data,labels = [],test_size = 0.4,seed=None,batch_size=256,num_workers=1):
 
+    if len(labels) == 0:
+        X_train, X_cv = train_test_split(data,test_size=test_size,random_state=seed)
+        X_val,X_test = train_test_split(X_cv,test_size=0.5,random_state=seed)
 
-    X_train, X_cv = train_test_split(data,test_size=test_size,random_state=seed)
-    X_val,X_test = train_test_split(X_cv,test_size=0.5,random_state=seed)
+    else:
+        X_train,X_val,X_test = [],[],[]
+        classes = np.unique(labels)
+        for label in classes:
+            d_class = data[labels ==label]
+            train_class,cv_class = train_test_split(d_class,test_size=test_size,random_state=seed)
+            val_class,test_class= train_test_split(cv_class,test_size=0.5,random_state=seed)
+            X_train.append(train_class)
+            X_val.append(val_class)
+            X_test.append(test_class)
+
+        X_train = np.vstack(X_train)
+        X_val = np.vstack(X_val)
+        X_test = np.vstack(X_test)
+
 
     DS_train,DS_val,DS_test = toy_dataset(X_train),toy_dataset(X_val),toy_dataset(X_test)
 
