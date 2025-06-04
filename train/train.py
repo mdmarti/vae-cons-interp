@@ -162,7 +162,7 @@ def train_cv_reg(model,dataloaders,loss,regularizer, nEpochs=200,lr=1e-3,val_fre
 
     final_elbos = []
     for reg_weight in reg_weight_array:
-
+        print(f"now cv with reg weight {reg_weight}")
         reggie = lambda model: regularizer(model,weight=reg_weight)
         model_copy,temp_opt,scheduler,(train_recon,val_recon),(train_kl,val_kl), _ = train(model_copy,dataloaders=dataloaders,loss=loss,\
                                                                                  regularizer=reggie,nEpochs=nEpochs,lr=lr,val_freq=val_freq,\
