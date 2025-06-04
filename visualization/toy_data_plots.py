@@ -13,7 +13,7 @@ def make_toy_plot(true_latents,train_data,\
                         show=False,save_fn=''):
 
     fig_layout=\
-    [['Original "Latents"', 'Original "Latents"','Linear Decoder Latents', 'Linear Decoder Latents','Deep Linear Decoder Latents', 'Deep Linear Decoder Latents','Deep unconstrained decoder Latents','Deep unconstrained decoder Latents','Nonlinear regularized decoder Latents (prelu)','Nonlinear regularized decoder Latents (prelu)','Nonlinear regularized decoder Latents (prelu)','Nonlinear regularized decoder Latents (prelu)'],\
+    [['Original "Latents"', 'Original "Latents"','Linear Decoder Latents', 'Linear Decoder Latents','Deep Linear Decoder Latents', 'Deep Linear Decoder Latents','Deep unconstrained decoder Latents','Deep unconstrained decoder Latents','Nonlinear regularized decoder Latents (prelu)','Nonlinear regularized decoder Latents (prelu)','nonlinear regularized decoder Latents (mat)','nonlinear regularized decoder Latents (mat)'],\
     ['Original data','Original data','Linear Decoder Reconstructions', 'Linear Decoder Reconstructions','Deep Linear Decoder Reconstructions', 'Deep Linear Decoder Reconstructions','Deep unconstrained decoder Reconstructions','Deep unconstrained decoder Reconstructions','nonlinear regularized decoder Reconstructions (prelu)','nonlinear regularized decoder Reconstructions (prelu)','nonlinear regularized decoder Reconstructions (mat)','nonlinear regularized decoder Reconstructions (mat)']]
 
     #plt.close('all')
@@ -40,7 +40,7 @@ def make_toy_plot(true_latents,train_data,\
         axs['Deep unconstrained decoder Reconstructions'].scatter(nonlinear_recons[data_inds,0],nonlinear_recons[data_inds,1],label='Deep nonlinear reconstruction')
 
         axs['Nonlinear regularized decoder Latents (prelu)'].scatter(nonlinear_prelureg_latents[data_inds,0],nonlinear_prelureg_latents[data_inds,1],label='Deep prelu reg nonlinear embedding')
-        axs['Nonlinear regularized decoder Reconstructions (prelu)'].scatter(nonlinear_prelureg_recons[data_inds,0],nonlinear_prelureg_recons[data_inds,1],label='Deep prelu reg nonlinear reconstruction')
+        axs['nonlinear regularized decoder Reconstructions (prelu)'].scatter(nonlinear_prelureg_recons[data_inds,0],nonlinear_prelureg_recons[data_inds,1],label='Deep prelu reg nonlinear reconstruction')
 
         axs['nonlinear regularized decoder Latents (mat)'].scatter(nonlinear_matreg_latents[data_inds,0],nonlinear_matreg_latents[data_inds,1],label='Deep matreg nonlinear embedding')
         axs['nonlinear regularized decoder Reconstructions (mat)'].scatter(nonlinear_matreg_recons[data_inds,0],nonlinear_matreg_recons[data_inds,1],label='Deep matreg nonlinear reconstruction')
