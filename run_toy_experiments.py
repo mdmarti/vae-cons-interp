@@ -148,7 +148,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
 
         return log_probs,kls,regs,embeddings,recons
     
-    return [],[],[],[]
+    return [],[],[],[],[]
 
 def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99,proj_sd=0.08,encoder_activation='GELU'):
 

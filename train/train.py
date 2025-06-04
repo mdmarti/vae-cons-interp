@@ -57,12 +57,14 @@ def load_model(location):
                       activation=decoder_details['activation'],
                       device=decoder_details['device'])
     elif decoder_type =='regularized MLP' :
+        lt = LinearEncouragementLayer_v2 if 'v2' in decoder_details['layer type'] else lambda in_size,out_size,activation: LinearEncouragementLayer(in_size,out_size,activation,full_prelu=True)
         dec = RegularizedDecoder(n_layers=decoder_details['n_layers'],
                       data_dim=decoder_details['data_dim'],
                       hidden_dim=decoder_details['hidden_dim'],
                       latent_dim=decoder_details['latent_dim'],
                       activation=decoder_details['activation'],
-                      device=decoder_details['device'])
+                      device=decoder_details['device'],
+                      layer_type=lt)
     else:
         raise NotImplementedError
     

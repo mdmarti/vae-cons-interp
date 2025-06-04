@@ -266,9 +266,10 @@ class RegularizedDecoder(Decoder):
             'data_dim':data_dim,
             'hidden_dim':hidden_dim,
             'latent_dim':latent_dim,
-            'activation':nn.Identity(),
+            'activation':activation,
             'device':device,
-            'type': 'regularized MLP'
+            'type': 'regularized MLP',
+            'layer type': str(type(layer_type))
         }
 
 
