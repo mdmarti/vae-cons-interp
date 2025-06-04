@@ -83,6 +83,55 @@ class ProbabilisticEncoder(Encoder):
         mu,L,d = self.mu_net(x),self.L_net(x),self.d_net(x)
 
         return mu, L.unsqueeze(-1), d.exp()
+    
+class RegularizedProbabilisticEncoder(Encoder):
+
+
+    def __init__(self, n_layers_shared,n_layers_private,\
+                 data_dim, hidden_dim, latent_dim,layer_type, activation=nn.GELU(), device='default'):
+        super().__init__( n_layers_shared,n_layers_private,\
+                 data_dim, hidden_dim, latent_dim, activation=nn.GELU(), device='default')
+        if n_layers_private == 0:
+            self.mu_net = nn.Linear(hidden_dim,latent_dim)
+            self.L_net = nn.Linear(hidden_dim,latent_dim)
+            self.d_net = nn.Linear(hidden_dim,latent_dim)
+        else:
+            mu_layers = [layer_type(latent_dim,hidden_dim,activation)]
+            L_layers = [layer_type(latent_dim,hidden_dim,activation)]
+            d_layers = [layer_type(latent_dim,hidden_dim,activation)]
+            for _ in range(n_layers_private - 1):
+                mu_layers += [layer_type(latent_dim,hidden_dim,activation)]
+                L_layers += [layer_type(latent_dim,hidden_dim,activation)]
+                d_layers += [layer_type(latent_dim,hidden_dim,activation)]
+            mu_layers += [nn.Linear(hidden_dim,latent_dim)]
+            L_layers += [nn.Linear(hidden_dim,latent_dim)]
+            d_layers += [nn.Linear(hidden_dim,latent_dim)]
+
+            self.mu_net = nn.Sequential(*mu_layers)
+            self.L_net = nn.Sequential(*L_layers)
+            self.d_net = nn.Sequential(*d_layers)
+        if device == 'default':
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = device
+        self.to(device)
+        self.spec_dict={
+            'n_layers_shared':n_layers_shared,
+            'n_layers_private':n_layers_private,
+            'data_dim':data_dim,
+            'hidden_dim':hidden_dim,
+            'latent_dim':latent_dim,
+            'activation':activation,
+            'device':device,
+            'type':'probabilistic',
+        }
+
+    def forward(self,x):
+
+        x = self.net(x)
+        
+        mu,L,d = self.mu_net(x),self.L_net(x),self.d_net(x)
+
+        return mu, L.unsqueeze(-1), d.exp()
         
 class LinearEncouragementLayer(nn.Module):
 
