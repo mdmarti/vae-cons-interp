@@ -212,7 +212,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         print(f'now fitting for precision = {p}')
         ##### Linaer model #######
         vae_linear_lps,vae_linear_kls,vae_linearlatents,vae_linearrecons = run_helper(save_dir,model_type='linear',precision=p,\
-                                                           loaders=loaders,data=test_data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
+                                                           loaders=loaders,test_data=test_data,test_labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=0,decoder_activation=nn.Identity(),encoder_activation=encoder_activation)
 
@@ -223,7 +223,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
         #### deep linear model ######
         vae_deeplinear_lps,vae_deeplinear_kls,vae_deeplinearlatents,vae_deeplinearrecons = run_helper(save_dir,model_type='deeplinear',precision=p,\
-                                                        loaders=loaders,data=test_data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
+                                                        loaders=loaders,test_data=test_data,test_labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.Identity(),encoder_activation=encoder_activation)
 
@@ -239,7 +239,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
         #### nonlinear model #########
         vae_nonlinear_lps,vae_nonlinear_kls,vae_nonlinearlatents,vae_nonlinearrecons = run_helper(save_dir,model_type='nonlinear',precision=p,\
-                                                        loaders=loaders,data=test_data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
+                                                        loaders=loaders,test_data=test_data,test_labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.GELU(),encoder_activation=encoder_activation)
         
@@ -252,7 +252,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         #### regularized nonlinear model prelu #####
 
         vae_regnonlinear_lps,vae_regnonlinear_kls,vae_regnonlinearlatents,vae_regnonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
-                                                        loaders=loaders,data=test_data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
+                                                        loaders=loaders,test_data=test_data,test_labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.GELU(),encoder_activation=encoder_activation)
         
@@ -265,7 +265,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
          #### regularized nonlinear model general #####
 
         vae_reg2nonlinear_lps,vae_reg2nonlinear_kls,vae_reg2nonlinearlatents,vae_reg2nonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
-                                                        loaders=loaders,data=test_data,labels=test_labs,nEpochs=nEpochs,lr=lr,\
+                                                        loaders=loaders,test_data=test_data,test_labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.GELU(),reg_layer_type='mat',encoder_activation=encoder_activation)
         
