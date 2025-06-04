@@ -150,7 +150,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
     
     return [],[],[],[]
 
-def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99,proj_sd=0.08):
+def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear=True,identity=False,seed=99,proj_sd=0.08,encoder_activation='GELU'):
 
     num_workers = len(os.sched_getaffinity(0))
     if identity:
@@ -168,6 +168,20 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
         proj = NonlinearProjection(data_dim=2,project_dim=proj_dim,\
                                    nonlinearity=nonlinearity,inverse_nonlinearity=inverse_nonlinearity,seed=seed)
+        
+
+    if encoder_activation.lower() == 'gelu':
+        encoder_activation=nn.GELU()
+    elif encoder_activation.lower() == 'relu':
+        encoder_activation = nn.ReLU()
+    elif encoder_activation.lower() == 'tanh':
+        encoder_activation = nn.Tanh()
+    elif encoder_activation.lower() == 'sigmoid':
+        encoder_activation = nn.Sigmoid()
+    elif encoder_activation.lower() == 'silu':
+        encoder_activation = nn.SiLU()
+    else:
+        raise NotImplementedError
 
 
     if not os.path.isdir(save_dir):
@@ -197,7 +211,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         vae_linear_lps,vae_linear_kls,vae_linearlatents,vae_linearrecons = run_helper(save_dir,model_type='linear',precision=p,\
                                                            loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
-                                                                n_layers_decoder=0,decoder_activation=nn.Identity())
+                                                                n_layers_decoder=0,decoder_activation=nn.Identity(),encoder_activation=encoder_activation)
 
         linear_gmm = GMM(n_components=4,covariance_type='full',n_init=10)
         pred_labels_linear = linear_gmm.fit_predict(vae_linearlatents)
@@ -208,7 +222,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         vae_deeplinear_lps,vae_deeplinear_kls,vae_deeplinearlatents,vae_deeplinearrecons = run_helper(save_dir,model_type='deeplinear',precision=p,\
                                                         loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
-                                                                n_layers_decoder=7,decoder_activation=nn.Identity())
+                                                                n_layers_decoder=7,decoder_activation=nn.Identity(),encoder_activation=encoder_activation)
 
 
         
@@ -224,7 +238,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         vae_nonlinear_lps,vae_nonlinear_kls,vae_nonlinearlatents,vae_nonlinearrecons = run_helper(save_dir,model_type='nonlinear',precision=p,\
                                                         loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
-                                                                n_layers_decoder=7,decoder_activation=nn.GELU())
+                                                                n_layers_decoder=7,decoder_activation=nn.GELU(),encoder_activation=encoder_activation)
         
         nonlinear_gmm = GMM(n_components=4,covariance_type='full',n_init=10)
         pred_labels_nonlinear = nonlinear_gmm.fit_predict(vae_nonlinearlatents)
@@ -237,7 +251,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         vae_regnonlinear_lps,vae_regnonlinear_kls,vae_regnonlinearlatents,vae_regnonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
                                                         loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
-                                                                n_layers_decoder=7,decoder_activation=nn.GELU())
+                                                                n_layers_decoder=7,decoder_activation=nn.GELU(),encoder_activation=encoder_activation)
         
         regnonlinear_gmm = GMM(n_components=4,covariance_type='full',n_init=10)
         pred_labels_regnonlinear = regnonlinear_gmm.fit_predict(vae_regnonlinearlatents)
@@ -250,7 +264,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         vae_reg2nonlinear_lps,vae_reg2nonlinear_kls,vae_reg2nonlinearlatents,vae_reg2nonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
                                                         loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
-                                                                n_layers_decoder=7,decoder_activation=nn.GELU(),reg_layer_type='mat')
+                                                                n_layers_decoder=7,decoder_activation=nn.GELU(),reg_layer_type='mat',encoder_activation=encoder_activation)
         
         reg2nonlinear_gmm = GMM(n_components=4,covariance_type='full',n_init=10)
         pred_labels_reg2nonlinear = reg2nonlinear_gmm.fit_predict(vae_reg2nonlinearlatents)
