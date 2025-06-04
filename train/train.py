@@ -3,6 +3,8 @@ from models.vae import *
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
+import numpy as np
+import copy
 
 def save_model(model,optimizer,location):
 
@@ -151,6 +153,32 @@ def train(model,dataloaders,loss,regularizer = None, nEpochs=200,lr=1e-3,val_fre
 
 
     return model,opt,scheduler,(train_recon,val_recon),(train_kl,val_kl),(train_reg,val_reg)
+
+def train_cv_reg(model,dataloaders,loss,regularizer, nEpochs=200,lr=1e-3,val_freq=10,vis_freq=1,max_norm_grad=1e-2,opt =None,start_epoch=0,save_freq=-1,model_prefix='model'):
+
+
+    reg_weight_array = [1e-2,5e-2,1e-1,5e-1,1,5,10,50,100,500,1000,5000]
+    model_copy = copy.deepcopy(model)
+
+    final_elbos = []
+    for reg_weight in reg_weight_array:
+
+        reggie = lambda model: regularizer(model,weight=reg_weight)
+        model_copy,temp_opt,scheduler,(train_recon,val_recon),(train_kl,val_kl), _ = train(model_copy,dataloaders=dataloaders,loss=loss,\
+                                                                                 regularizer=reggie,nEpochs=nEpochs,lr=lr,val_freq=val_freq,\
+                                                                                    vis_freq=vis_freq,max_norm_grad=max_norm_grad,opt=opt,\
+                                                                                        start_epoch=start_epoch,save_freq=save_freq,model_prefix=model_prefix)
+        final_elbo = -np.nanmean(np.array(val_recon)[:-10,1] - np.array(val_kl)[:-10,1])
+        final_elbos.append(final_elbo)
+    best_reg_weight = reg_weight_array[np.argmax(final_elbos)]
+    best_reggie =  lambda model: regularizer(model,weight=best_reg_weight)
+
+    model,opt,scheduler,(train_recon,val_recon),(train_kl,val_kl), (train_reg,val_reg) = train(model_copy,dataloaders=dataloaders,loss=loss,\
+                                                                                 regularizer=best_reggie,nEpochs=nEpochs,lr=lr,val_freq=val_freq,\
+                                                                                    vis_freq=vis_freq,max_norm_grad=max_norm_grad,opt=opt,\
+                                                                                        start_epoch=start_epoch,save_freq=save_freq,model_prefix=model_prefix)
+    
+    return model,opt,scheduler,(train_recon,val_recon),(train_kl,val_kl),(train_reg,val_reg) 
 
 
 
