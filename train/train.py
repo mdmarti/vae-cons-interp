@@ -167,7 +167,7 @@ def train_cv_reg(model,dataloaders,loss,regularizer, nEpochs=200,lr=1e-3,val_fre
         model_copy,temp_opt,scheduler,(train_recon,val_recon),(train_kl,val_kl), _ = train(model_copy,dataloaders=dataloaders,loss=loss,\
                                                                                  regularizer=reggie,nEpochs=nEpochs,lr=lr,val_freq=val_freq,\
                                                                                     vis_freq=vis_freq,max_norm_grad=max_norm_grad,opt=opt,\
-                                                                                        start_epoch=start_epoch,save_freq=save_freq,model_prefix=model_prefix)
+                                                                                        start_epoch=start_epoch,save_freq=-1,model_prefix=model_prefix)
         final_elbo = -np.nanmean(np.array(val_recon)[:-10,1] - np.array(val_kl)[:-10,1])
         final_elbos.append(final_elbo)
     best_reg_weight = reg_weight_array[np.argmax(final_elbos)]
