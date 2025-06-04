@@ -5,7 +5,7 @@ from data.toy_data import *
 from data.data_utils import *
 from train.losses import *
 from train.regularization import *
-from train.train import train,save_model,load_model
+from train.train import train,save_model,load_model,train_cv_reg
 
 from models.vae import *
 from eval.metrics import assess_gmm_fit,get_all_stats
@@ -41,7 +41,8 @@ def find_create_model(target_model_prefix):
 def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr=1e-3,
                n_layers_shared=4,n_layers_private=3,data_dim=1000,hidden_dim=125,latent_dim=2,
                device='default',
-               n_layers_decoder=7,decoder_activation=nn.GELU()):
+               n_layers_decoder=7,decoder_activation=nn.GELU(),
+               reg_layer_type='prelu',encoder_activation=nn.GELU()):
 
     model_path = os.path.join(save_dir,f'vae_{model_type}decoder_{precision}precision_checkpoint_{nEpochs}.tar')
     model_prefix = model_path.split(f'{nEpochs}.tar')[0]
@@ -53,6 +54,13 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
     n_attempts = 0
 
     loss = lambda target, model_out: ELBO_more_stable(target,model_out,recon_precision=precision)
+
+    if reg_layer_type == 'prelu':
+        reg_layer = lambda in_size,out_size,activation: LinearEncouragementLayer(in_size,out_size,activation,full_prelu=True)
+        regularizer = linear_encouragement_prelu
+    else:
+        reg_layer = LinearEncouragementLayer_v2
+        regularizer = linear_encouragement_mat
     if not os.path.isfile(model_path):
         while n_attempts < 5 and not done_training:
 
@@ -79,31 +87,38 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
                     start_epoch=1
                     
                     enc = ProbabilisticEncoder(n_layers_shared=n_layers_shared,n_layers_private=n_layers_private,
-                                            data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,device=device)
+                                            data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,activation=encoder_activation,device=device)
                     
                     if model_type == 'regularized_nonlinear':
+                        
                         dec = RegularizedDecoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
-                                    activation=decoder_activation,device=device)
+                                    activation=decoder_activation,device=device,layer_type=reg_layer)
+                        
+                        vae = VariationalAutoEncoder(enc,dec,LowRankMultivariateNormal,out_type='params')
+                        opt=None
+                        vae,opt,scheduler,log_probs,kls,regs = train_cv_reg(vae,loaders,loss=loss,regularizer=regularizer,
+                                                            nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-4,start_epoch=start_epoch,opt =opt,save_freq=100,model_prefix=model_prefix)
                     else:
+                       
                         dec = Decoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
                                     activation=decoder_activation,device=device)
                        
                         
-                    vae = VariationalAutoEncoder(enc,dec,LowRankMultivariateNormal,out_type='params')
-                    opt=None
-                vae,opt,scheduler,log_probs,kls = train(vae,loaders,loss=loss,
-                                                    nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-4,start_epoch=start_epoch,opt =opt,save_freq=100,model_prefix=model_prefix)
+                        vae = VariationalAutoEncoder(enc,dec,LowRankMultivariateNormal,out_type='params')
+                        opt=None
+                        vae,opt,scheduler,log_probs,kls,regs = train(vae,loaders,loss=loss,
+                                                            nEpochs=nEpochs,val_freq=10,lr=lr,max_norm_grad=1e-4,start_epoch=start_epoch,opt =opt,save_freq=100,model_prefix=model_prefix)
                 done_training=True 
             except:
                 print("bad params, restarting")
                 n_attempts += 1
         if done_training:
             save_model(vae,opt,model_path)
-            embeddings = vae.encode(torch.from_numpy(data).to(vae.device).to(torch.float32))[0]
+            embeddings = vae.encode(torch.from_numpy(loaders['test'].dataset.data).to(vae.device).to(torch.float32))[0]
             recons= vae.decode(embeddings).detach().cpu().numpy()
             embeddings = embeddings.detach().cpu().numpy()
 
-            train_stats = {'lp':log_probs,'kl':kls}
+            train_stats = {'lp':log_probs,'kl':kls,'regs':regs}
             model_outputs = {'embeddings':embeddings.tolist(),'recons':recons.tolist()}
 
             with open(train_stats_path,'w') as f:
@@ -118,6 +133,7 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
             train_stats = json.load(f)
         log_probs=train_stats['lp']
         kls=train_stats['kl']
+        regs = train_stats['regs']
                 
         with open(embed_path,'r') as f:
             model_outputs = json.load(f)
@@ -125,12 +141,12 @@ def run_helper(save_dir,model_type,precision,loaders,data,labels,nEpochs=1000,lr
         done_training=True
 
     if done_training:
-        train_test_plot(log_probs,kls,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
+        train_test_plot(log_probs,kls,regs,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
                     save_fn=os.path.join(save_dir,f'{model_type}_{precision}_traintest.svg'))
         embedding_plot(embeddings,recons,data,labels,label=f"{model_type} decoder, recon precision = {precision}",show=False,\
                         save_fn=os.path.join(save_dir,f'{model_type}_{precision}_embeds.svg'))
 
-        return log_probs,kls,embeddings,recons
+        return log_probs,kls,regs,embeddings,recons
     
     return [],[],[],[]
 
@@ -169,7 +185,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
     #print(labels.shape)
     base_precisions,base_recalls = assess_gmm_fit(labels,pred_labels)
 
-    loaders = get_loaders(data,test_size=0.4,seed=seed,num_workers = num_workers,batch_size=512)
+    loaders = get_loaders(data,labels=labels,test_size=0.4,seed=seed,num_workers = num_workers,batch_size=512)
 
     precisions = [closest_pt/4,closest_pt/2,closest_pt,closest_pt*2,closest_pt*4] #np.logspace(-2,3,1)
     lr = 1e-3
@@ -215,6 +231,32 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
         #nonlinear_model_metrics = get_all_stats(latents,vae_nonlinearlatents,labels,pred_labels_nonlinear)
 
         ##############################
+
+        #### regularized nonlinear model prelu #####
+
+        vae_regnonlinear_lps,vae_regnonlinear_kls,vae_regnonlinearlatents,vae_regnonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
+                                                        loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
+                                                            n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
+                                                                n_layers_decoder=7,decoder_activation=nn.GELU())
+        
+        regnonlinear_gmm = GMM(n_components=4,covariance_type='full',n_init=10)
+        pred_labels_regnonlinear = regnonlinear_gmm.fit_predict(vae_regnonlinearlatents)
+
+
+        ################################################
+
+         #### regularized nonlinear model general #####
+
+        vae_reg2nonlinear_lps,vae_reg2nonlinear_kls,vae_reg2nonlinearlatents,vae_reg2nonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
+                                                        loaders=loaders,data=data,labels=labels,nEpochs=nEpochs,lr=lr,\
+                                                            n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
+                                                                n_layers_decoder=7,decoder_activation=nn.GELU(),reg_layer_type='mat')
+        
+        reg2nonlinear_gmm = GMM(n_components=4,covariance_type='full',n_init=10)
+        pred_labels_reg2nonlinear = reg2nonlinear_gmm.fit_predict(vae_reg2nonlinearlatents)
+
+
+        ################################################
         """
         #### lipschitz model #########
         enc_lipschitz = ProbabilisticEncoder(n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2)
