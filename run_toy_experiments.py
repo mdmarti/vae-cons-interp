@@ -42,7 +42,7 @@ def run_helper(save_dir,model_type,precision,loaders,test_data,test_labels,nEpoc
                n_layers_shared=4,n_layers_private=3,data_dim=1000,hidden_dim=125,latent_dim=2,
                device='default',
                n_layers_decoder=7,decoder_activation=nn.GELU(),
-               reg_layer_type='prelu',encoder_activation=nn.GELU()):
+              encoder_activation=nn.GELU()):
 
     model_path = os.path.join(save_dir,f'vae_{model_type}decoder_{precision}precision_checkpoint_{nEpochs}.tar')
     model_prefix = model_path.split(f'{nEpochs}.tar')[0]
@@ -55,7 +55,7 @@ def run_helper(save_dir,model_type,precision,loaders,test_data,test_labels,nEpoc
 
     loss = lambda target, model_out: ELBO_more_stable(target,model_out,recon_precision=precision)
 
-    if reg_layer_type == 'prelu':
+    if 'prelu' in model_type:
         reg_layer = lambda in_size,out_size,activation: LinearEncouragementLayer(in_size,out_size,activation,full_prelu=True)
         regularizer = linear_encouragement_prelu
     else:
@@ -253,7 +253,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
         #### regularized nonlinear model prelu #####
 
-        vae_regnonlinear_lps,vae_regnonlinear_kls,vae_regnonlinear_regs,vae_regnonlinearlatents,vae_regnonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
+        vae_regnonlinear_lps,vae_regnonlinear_kls,vae_regnonlinear_regs,vae_regnonlinearlatents,vae_regnonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear_prelu',precision=p,\
                                                         loaders=loaders,test_data=test_data,test_labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.GELU(),encoder_activation=encoder_activation)
@@ -266,7 +266,7 @@ def run_experiments(save_dir,n_samples=15000,proj_dim = 1000,nEpochs=1000,linear
 
          #### regularized nonlinear model general #####
 
-        vae_reg2nonlinear_lps,vae_reg2nonlinear_kls,vae_reg2nonlinear_regs,vae_reg2nonlinearlatents,vae_reg2nonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear',precision=p,\
+        vae_reg2nonlinear_lps,vae_reg2nonlinear_kls,vae_reg2nonlinear_regs,vae_reg2nonlinearlatents,vae_reg2nonlinearrecons = run_helper(save_dir,model_type='regularized_nonlinear_mat',precision=p,\
                                                         loaders=loaders,test_data=test_data,test_labels=test_labs,nEpochs=nEpochs,lr=lr,\
                                                             n_layers_shared=4,n_layers_private=3,data_dim=proj_dim,hidden_dim=125,latent_dim=2,device='default',\
                                                                 n_layers_decoder=7,decoder_activation=nn.GELU(),reg_layer_type='mat',encoder_activation=encoder_activation)

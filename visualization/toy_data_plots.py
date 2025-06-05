@@ -21,10 +21,13 @@ def make_toy_plot(true_latents,train_data,\
     labels = np.unique(true_labels)
 
     if train_data.shape[1] > 2:
-        train_data = PCA(n_components=2).fit_transform(train_data)
-        linear_recons = PCA(n_components=2).fit_transform(linear_recons)
-        deep_linear_recons = PCA(n_components=2).fit_transform(deep_linear_recons)
-        nonlinear_recons = PCA(n_components=2).fit_transform(nonlinear_recons)
+        train_PCA = PCA(n_components=2).fit(train_data)
+        train_data = train_PCA.transform(train_data)
+        linear_recons = train_PCA.transform(linear_recons)
+        deep_linear_recons = train_PCA.transform(deep_linear_recons)
+        nonlinear_recons = train_PCA.transform(nonlinear_recons)
+        nonlinear_prelureg_recons = train_PCA.transform(nonlinear_prelureg_recons)
+        nonlinear_matreg_recons = train_PCA.transform(nonlinear_matreg_recons)
     for label in labels:
         data_inds = true_labels == label
         axs['Original "Latents"'].scatter(true_latents[data_inds,0],true_latents[data_inds,1],label='Generating data')
