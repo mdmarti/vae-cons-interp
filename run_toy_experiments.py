@@ -56,9 +56,11 @@ def run_helper(save_dir,model_type,precision,loaders,test_data,test_labels,nEpoc
     loss = lambda target, model_out: ELBO_more_stable(target,model_out,recon_precision=precision)
 
     if 'prelu' in model_type:
+        print("regularizing with prelu")
         reg_layer = lambda in_size,out_size,activation: LinearEncouragementLayer(in_size,out_size,activation,full_prelu=True)
         regularizer = linear_encouragement_prelu
-    else:
+    elif 'regularized_nonlinear' in model_type:
+        print("regularizing whole weight mat")
         reg_layer = LinearEncouragementLayer_v2
         regularizer = linear_encouragement_mat
     if not os.path.isfile(model_path):
@@ -91,7 +93,7 @@ def run_helper(save_dir,model_type,precision,loaders,test_data,test_labels,nEpoc
                     enc = ProbabilisticEncoder(n_layers_shared=n_layers_shared,n_layers_private=n_layers_private,
                                             data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,activation=encoder_activation,device=device)
                     
-                    if model_type == 'regularized_nonlinear':
+                    if 'regularized_nonlinear' in model_type:
                         
                         dec = RegularizedDecoder(n_layers=n_layers_decoder,data_dim=data_dim,hidden_dim=hidden_dim,latent_dim=latent_dim,
                                     activation=decoder_activation,device=device,layer_type=reg_layer)
